@@ -32,11 +32,13 @@ readonly MODE_CONFIG_ONLY="config-only"
 readonly MODE_STARSHIP_ONLY="starship-only"
 readonly MODE_PNPM_ONLY="pnpm-only"
 readonly MODE_MCP_ONLY="mcp-only"
+readonly MODE_KIRO_ONLY="kiro-only"
 
 # Default settings
 INSTALL_STARSHIP=true
-INSTALL_FLUTTER=true
+INSTALL_FLUTTER=false
 INSTALL_PNPM=true
+INSTALL_KIRO=true
 DRY_RUN=false
 
 # Error handling
@@ -150,11 +152,13 @@ MODES:
   starship-only       Install and configure Starship only
   pnpm-only           Install and configure pnpm only
   mcp-only            Install and configure MCP servers only
+  kiro-only           Install and configure Kiro command only
 
 OPTIONS:
   --no-starship       Skip Starship installation
   --no-flutter        Skip Flutter installation
   --no-pnpm           Skip pnpm installation
+  --no-kiro           Skip Kiro command installation
   --dry-run           Show what would be done without executing
   --help, -h          Show this help message
 
@@ -168,6 +172,7 @@ EXAMPLES:
   $0 pnpm-only                # Install pnpm only
   $0 --full --no-flutter      # Full setup without Flutter
   $0 mcp-only                 # Install MCP servers only
+  $0 kiro-only                # Install Kiro command only
 
 ENVIRONMENT VARIABLES FOR MCP:
   Before running setup, you can set these environment variables to customize MCP:
@@ -451,6 +456,11 @@ install_claude_config() {
     
     # Install MCP configuration
     install_mcp_config
+    
+    # Install Kiro command if enabled
+    if [[ "$INSTALL_KIRO" == "true" ]]; then
+        install_kiro_command
+    fi
 }
 
 # Separate function for MCP installation
@@ -524,6 +534,26 @@ install_mcp_only() {
     
     # Install MCP configuration
     install_mcp_config
+}
+
+install_kiro_command() {
+    log_step "Installing Kiro spec-driven development command..."
+    
+    # Run the Kiro setup script
+    if [[ -f "$SCRIPT_DIR/setup-kiro.sh" ]]; then
+        if [[ ! "$DRY_RUN" == "true" ]]; then
+            bash "$SCRIPT_DIR/setup-kiro.sh" || {
+                log_error "Failed to install Kiro command"
+                return 1
+            }
+        else
+            log_info "Would run: bash $SCRIPT_DIR/setup-kiro.sh"
+        fi
+        log_success "Kiro command installed successfully"
+    else
+        log_error "Kiro setup script not found: $SCRIPT_DIR/setup-kiro.sh"
+        return 1
+    fi
 }
 
 install_zsh_config() {
@@ -776,7 +806,7 @@ main() {
                 mode="$MODE_FULL"
                 shift
                 ;;
-            full|quick|config-only|starship-only|pnpm-only|mcp-only)
+            full|quick|config-only|starship-only|pnpm-only|mcp-only|kiro-only)
                 mode="$1"
                 shift
                 ;;
@@ -790,6 +820,10 @@ main() {
                 ;;
             --no-pnpm)
                 INSTALL_PNPM=false
+                shift
+                ;;
+            --no-kiro)
+                INSTALL_KIRO=false
                 shift
                 ;;
             --dry-run)
@@ -895,10 +929,15 @@ main() {
             # MCP only
             install_mcp_only
             ;;
+            
+        "$MODE_KIRO_ONLY")
+            # Kiro command only
+            install_kiro_command
+            ;;
     esac
     
     # Verify installation
-    if [[ "$mode" != "$MODE_STARSHIP_ONLY" ]] && [[ "$mode" != "$MODE_PNPM_ONLY" ]] && [[ "$mode" != "$MODE_MCP_ONLY" ]]; then
+    if [[ "$mode" != "$MODE_STARSHIP_ONLY" ]] && [[ "$mode" != "$MODE_PNPM_ONLY" ]] && [[ "$mode" != "$MODE_MCP_ONLY" ]] && [[ "$mode" != "$MODE_KIRO_ONLY" ]]; then
         verify_installation
     fi
     

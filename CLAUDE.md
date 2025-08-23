@@ -401,6 +401,60 @@ The monitor automatically saves user preferences and supports:
 
 For advanced configuration and troubleshooting, refer to the [Claude Code Usage Monitor documentation](https://github.com/Maciek-roboblog/Claude-Code-Usage-Monitor).
 
+## Custom Commands
+
+### /kiro - Spec-Driven Development Command
+
+**「コードを書く前に構造を与える」** - Kiro の革新的 spec-driven development コマンド
+
+従来のコード生成とは異なり、開発の混沌に構造を与えることに重点を置いた仕様駆動開発を実現。わずか 4 行程度の要件入力から、プロダクトマネージャーレベルの詳細な仕様と実装可能な設計まで段階的に展開。
+
+#### 使用方法
+```bash
+/kiro [機能名]
+```
+
+#### 3段階のワークフロー
+1. **Phase 1: Requirements Discovery** → `requirements.md` 生成
+   - 最小限入力から詳細なユーザーストーリー自動生成
+   - EARS記法による構造化要件記述
+   - セキュリティ要件・エッジケース自動補完
+
+2. **Phase 2: Design Exploration** → `design.md` 生成
+   - コードベース分析と最適アーキテクチャ提案
+   - Mermaid図による視覚的設計
+   - TypeScriptインターフェース自動生成
+
+3. **Phase 3: Implementation Planning** → `tasks.md` 生成
+   - ベストプラクティス自動適用
+   - 品質チェックポイント自動設定
+   - 依存関係とリスク軽減の分析
+
+#### コントロールコマンド
+- **「次に進んで」**: 現在のフェーズを完了してファイル生成、次フェーズへ
+- **「修正して」**: 現在のフェーズ内で内容を調整・改善
+- **「やり直して」**: 現在のフェーズを最初からやり直し
+- **「詳しく説明して」**: より詳細な説明や選択肢を提示
+
+#### 実証された効果
+- **2日間でセキュアファイル共有アプリ**: 暗号化対応の本番レベルアプリケーション
+- **1晩でゲーム開発**: 未経験者が2Dパズルゲーム作成完了
+- **週末でプロトタイプ→本番**: EC サイト商品管理システムの完成
+
+#### セットアップ
+```bash
+# Kiro コマンドのみインストール
+./scripts/setup.sh kiro-only
+
+# フルセットアップに含める
+./scripts/setup.sh --full
+
+# 個別インストール
+./scripts/setup-kiro.sh
+```
+
+詳細は `claude/commands/kiro/` ディレクトリを参照。
+
 ## Key Customization Points
 
 - Leader key is set to Space (`<leader> = Space`)
