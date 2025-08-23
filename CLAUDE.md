@@ -37,10 +37,11 @@ This is a comprehensive Flutter development environment configuration for Neovim
 
 ### Core Plugin Stack
 - **Flutter Tools**: `akinsho/flutter-tools.nvim` for Flutter development
-- **LSP**: Mason + lspconfig for language servers (Dart, TypeScript, JavaScript, etc.)
+- **LSP**: Mason + lspconfig for language servers (Dart, TypeScript, JavaScript, GraphQL, etc.)
   - **Dart**: `dartls` for Flutter/Dart development
   - **TypeScript/JavaScript**: `ts_ls` with inlay hints support
   - **ESLint**: `eslint` for linting with auto-fix on save
+  - **GraphQL**: `graphql` for GraphQL schema validation and IntelliSense
 - **Git Integration**: `lewis6991/gitsigns.nvim` with extensive hunk management
 - **AI Assistance**: 
   - `zbirenbaum/copilot.lua` with cmp integration
@@ -113,6 +114,14 @@ The configuration includes a simplified 3-panel IDE layout that provides an effi
 - **Debugging**: `<F5>` (start debug), `<F1>` (step into), `<F2>` (step over), `<F3>` (step out)
 - **LSP Actions**: `<leader>ca` (code actions), `<leader>rn` (rename), `gd` (go to definition)
 
+### GraphQL Development Workflow
+- **LSP Actions**: Same as general LSP commands (`<leader>ca`, `<leader>rn`, `gd`, `gr`, `K`)
+- **Schema Validation**: Automatic validation against `.graphqlrc` configured schema
+- **Auto-completion**: Triggered automatically or with `<C-Space>`
+- **Type Navigation**: `gd` to jump to type definitions in schema
+- **Project Setup**: Create `.graphqlrc.yml` or `graphql.config.yml` in project root
+- **Supported Files**: `.graphql`, `.gql`, and GraphQL in JS/TS files
+
 ### Git Operations (gitsigns.nvim)
 - **Hunk Navigation**: `]c` (next hunk), `[c` (previous hunk)
 - **Hunk Actions**: `<leader>hs` (stage), `<leader>hr` (reset), `<leader>hp` (preview)
@@ -169,11 +178,24 @@ The configuration includes a simplified 3-panel IDE layout that provides an effi
 - `pnpm-workspace.yaml` defines pnpm workspace structure
 - `scripts/setup-pnpm.sh` is the pnpm installation and setup script
 - `scripts/migrate-to-pnpm.sh` is the npm/yarn to pnpm migration script
+- `.graphqlrc.yml` is a reference GraphQL configuration file (for actual projects, create your own)
 
 ### Flutter Development
 - Flutter projects should be opened at the project root (where `pubspec.yaml` exists)
 - The configuration automatically detects Flutter projects and enables appropriate LSP servers
 - VSCode launch.json files are automatically read and integrated
+
+### GraphQL Development
+- GraphQL LSP provides schema validation, auto-completion, and IntelliSense
+- Supports `.graphql`, `.gql` files and GraphQL within JavaScript/TypeScript files
+- **Note**: A `.graphqlrc.yml` configuration file has been created in the Neovim config directory as a reference
+- For actual projects, create your own `.graphqlrc*` or `graphql.config.*` file in the project root
+- Features include:
+  - Schema validation and error checking
+  - Auto-completion for fields, types, and directives
+  - Go-to-definition for types and fields
+  - Hover information for GraphQL elements
+  - Support for GraphQL fragments and operations
 
 ### Documentation Structure
 - `*.md` files contain comprehensive guides for different aspects
@@ -475,6 +497,11 @@ For advanced configuration and troubleshooting, refer to the [Claude Code Usage 
   - Inlay hints for parameter names, types, and return values
   - ESLint auto-fix on save for code quality
   - Full IntelliSense, go-to-definition, and refactoring support
+- **GraphQL Support**: Added GraphQL language server with schema validation
+  - Auto-completion for queries, mutations, and subscriptions
+  - Schema validation and error checking
+  - Support for GraphQL in JavaScript/TypeScript files
+  - Requires `.graphqlrc` configuration file
 
 ### Enhanced Plugin Stack
 - **nvim-treesitter**: Syntax highlighting and advanced text objects

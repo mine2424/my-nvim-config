@@ -1,0 +1,49 @@
+# GraphQL Configuration Reference for Neovim LSP
+# This is a reference file - copy and modify for your actual projects
+# Place this file in your project root, not in the Neovim config directory
+
+# Schema location - adjust path to your actual schema file
+schema:
+  # Local schema file:
+  # - ./schema.graphql
+  # - ./src/schema.graphql
+  # Remote schema endpoint:
+  # - https://api.example.com/graphql
+  # Introspection result:
+  # - ./schema.json
+
+# GraphQL documents (queries, mutations, subscriptions)
+documents:
+  # - ./src/**/*.{graphql,gql}
+  # - ./src/**/*.{ts,tsx,js,jsx}  # For GraphQL in JS/TS files
+  # - ./app/**/*.{graphql,gql,ts,tsx}
+
+# Extensions configuration (optional)
+extensions:
+  # Endpoints for different environments
+  endpoints:
+    default:
+      url: http://localhost:4000/graphql
+      headers:
+        Authorization: Bearer ${GRAPHQL_TOKEN}
+    production:
+      url: https://api.example.com/graphql
+      headers:
+        Authorization: Bearer ${GRAPHQL_TOKEN}
+
+  # Code generation (optional - requires additional tools)
+  codegen:
+    generates:
+      ./src/generated/graphql.ts:
+        plugins:
+          - typescript
+          - typescript-operations
+          - typescript-react-apollo
+
+# Include/exclude patterns (optional)
+include:
+  - ./src/**/*
+exclude:
+  - ./node_modules
+  - ./dist
+  - ./**/__tests__/**

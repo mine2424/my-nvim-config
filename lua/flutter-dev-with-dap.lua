@@ -518,7 +518,7 @@ local plugins = {
     dependencies = { "williamboman/mason.nvim" },
     config = function()
       require("mason-lspconfig").setup({
-        ensure_installed = { "dartls", "ts_ls", "eslint" },
+        ensure_installed = { "dartls", "ts_ls", "eslint", "graphql" },
         automatic_installation = true,
         -- sqlls と markdown LSP を自動セットアップから除外
         handlers = {
@@ -701,6 +701,13 @@ local plugins = {
             command = "EslintFixAll",
           })
         end,
+      })
+
+      -- GraphQL LSP設定
+      lspconfig.graphql.setup({
+        capabilities = capabilities,
+        filetypes = { "graphql", "gql", "svelte", "typescriptreact", "javascriptreact" },
+        root_dir = lspconfig.util.root_pattern('.graphqlrc*', '.graphql.config.*', 'graphql.config.*', 'package.json'),
       })
 
     end,
@@ -960,7 +967,7 @@ local plugins = {
           "dart", "lua", "vim", "vimdoc", "query",
           "javascript", "typescript", "html", "css", "json",
           "yaml", "toml", "markdown", "markdown_inline",
-          "bash", "regex", "sql"
+          "bash", "regex", "sql", "graphql"
         },
         sync_install = false,
         auto_install = true,
