@@ -1,1 +1,55 @@
+# Environment files
 .env.mcp
+.env
+.env.local
+*.local
+
+# macOS
+.DS_Store
+*.swp
+*.swo
+*~
+
+# Neovim
+.netrwhist
+
+# Node
+node_modules/
+npm-debug.log
+yarn-error.log
+pnpm-debug.log
+
+# Logs
+*.log
+*.tmp
+
+# Backup files
+*.bak
+*.backup
+*_backup.*
+wezterm_*.lua
+
+# IDE
+.idea/
+.vscode/
+*.sublime-*
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+
+# Lua
+luac.out
+
+# Build artifacts
+build/
+dist/
+out/
+
+# Cache
+.cache/
+.temp/
+.tmp/

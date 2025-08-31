@@ -164,26 +164,33 @@ export GITHUB_PERSONAL_ACCESS_TOKEN='your-token'
 ```
 my-nvim-config/
 ├── scripts/
-│   ├── setup.sh                 # メインセットアップスクリプト
-│   ├── migrate-to-astronvim.sh  # AstroNvim移行
-│   ├── astronvim-post-setup.sh  # インストール後セットアップ
-│   ├── setup-ai-tools.sh        # AIツール設定
-│   └── mcp.sh                   # MCPサーバーセットアップ
+│   ├── setup.sh                    # メインセットアップスクリプト
+│   ├── setup-claude-integration.sh # Claude Code完全統合
+│   ├── setup-serena.sh            # Serena MCPセットアップ
+│   ├── setup-kiro.sh              # Kiro コマンドセットアップ
+│   └── mcp.sh                     # MCPサーバーセットアップ
 ├── astronvim-configs/
 │   └── lua/plugins/
-│       └── ai.lua               # AIプラグイン設定
-├── claude/                      # Claude Desktop設定
-├── zsh/                         # Zsh設定
-├── starship.toml               # Starshipプロンプト設定
-└── README.md                   # このファイル
+│       ├── ai.lua                 # AIプラグイン設定
+│       ├── telescope.lua          # Telescope設定
+│       └── claude-integration.lua # Claude Code Neovim統合
+├── claude/                        # Claude Desktop設定
+│   ├── commands/kiro/            # Kiroコマンド
+│   ├── settings.json             # Claude Code安全設定
+│   └── serena_config.yml         # Serena設定
+├── ghostty/                       # Ghosttyターミナル設定
+├── zsh/                          # Zsh設定
+├── starship.toml                 # Starshipプロンプト設定
+└── legacy-configs/               # 旧Neovim設定（バックアップ）
 ```
 
 ## 📚 詳細ドキュメント
 
-- **[ASTRONVIM_MIGRATION.md](ASTRONVIM_MIGRATION.md)** - AstroNvim移行ガイド
 - **[CLAUDE.md](CLAUDE.md)** - Claude Code統合ガイド  
+- **[SETUP_GUIDE.md](SETUP_GUIDE.md)** - セットアップガイド
 - **[MCP_SETUP.md](MCP_SETUP.md)** - MCPサーバー設定
 - **[TROUBLESHOOTING.md](TROUBLESHOOTING.md)** - トラブルシューティング
+- **[FLUTTER_KEYBINDINGS.md](FLUTTER_KEYBINDINGS.md)** - Flutterキーバインド
 
 ## 🔧 システム要件
 
