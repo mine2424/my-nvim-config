@@ -1,94 +1,188 @@
-# Flutter開発用Neovim設定 🎯
+# My Neovim Configuration - AstroNvim Edition 🚀
 
-高度なFlutter開発環境をNeovimで構築するための設定集です。Neovim 0.11+に最適化され、GitHub Copilot、Git統合、統合ターミナル、高度な診断機能など、本格的なIDE機能を提供します。
+最新のAstroNvim v4ベースの高度なNeovim開発環境。Flutter、JavaScript/TypeScript、React/Next.js、Python開発に最適化され、AI統合と包括的な開発ツールを提供します。
 
 ## ✨ 主な機能
 
-- 🚀 **Flutter開発**: DAP統合デバッグ、ホットリロード、デバイス管理
-- 🤖 **AI統合**: GitHub Copilot完全統合、Claude Code連携
-- 🔌 **アダプティブMCP統合**: 環境に応じて自動検出・設定されるMCPサーバー（GitHub、Context7、Playwright、Debug Thinking）
-- 📊 **Git統合**: リアルタイム差分表示、インラインステージング（Gitsigns）
-- 🎨 **モダンUI**: Treesitter構文ハイライト、Telescope検索、NvimTree、Markdownレンダリング
-- 🖼️ **シンプルな3分割IDE**: ファイルツリー | エディタ | エディタ レイアウト
-- 📝 **LSP**: Neovim 0.11+対応の強化されたLSP設定、インレイヒント対応
-- 🖥️ **ターミナル統合**: Ghostty モダンターミナル設定
-- 🐚 **モダンZsh**: wasabeef/dotfiles ベースの高機能Zsh設定
-- 🛠️ **CLIツール**: eza, bat, lazygit等のモダンCLIツール
-- 📦 **pnpm**: 高速パッケージマネージャーとワークスペース対応
-- ⚡ **高性能**: 遅延読み込み、最適化済み設定
+### 🌟 AstroNvim v4 ベース
+- **モダンIDE体験**: 完全なLSPサポート、デバッグ、インテリジェント補完
+- **遅延読み込み**: lazy.nvimによる高速起動
+- **美しいUI**: アイコン、カラー、モダンなインターフェース
+
+### 💻 言語サポート
+- **Flutter/Dart**: ホットリロード対応の完全なFlutter開発環境
+- **JavaScript/TypeScript**: React、Next.js、Node.js完全サポート
+- **Python**: 仮想環境対応の包括的Python開発
+- **Web技術**: HTML、CSS、Tailwind CSS、GraphQL
+
+### 🤖 AI統合
+- **GitHub Copilot**: インライン提案によるAIペアプログラミング
+- **ChatGPT**: 統合チャットとコード支援
+- **Avante**: Claude/GPT-4によるCursor風AI体験
+- **Codeium**: Copilotの無料代替
+
+### 🛠️ 追加ツール
+- **Claude Code統合**: Serena MCPによるセマンティックコード操作
+- **MCPサーバー**: GitHub、Filesystem、Playwright、Debug Thinking、Serena
+- **Git統合**: Gitsigns、Neogit、Diffview
+- **データベースクライアント**: UIを備えたvim-dadbod
+- **RESTクライアント**: HTTPリクエストテスト
+- **Markdownプレビュー**: render-markdown.nvimによるライブプレビュー
+- **Telescope.nvim**: 高速ファジーファインダーと検索
 
 ## 🚀 クイックスタート
 
+### 📦 AstroNvimへの移行（推奨）
+
 ```bash
-# 1. リポジトリクローン
+# リポジトリクローン
 git clone https://github.com/your-repo/my-nvim-config.git
 cd my-nvim-config
 
-# 2. 自動セットアップ（設定ファイルのみ - 安全なデフォルト）
-./scripts/setup.sh
-
-# フル機能インストール（ツール含む）
-./scripts/setup.sh --full
-
-# または個別セットアップ
-./scripts/setup.sh pnpm-only      # pnpmのみ
-./scripts/setup.sh starship-only  # Starshipのみ
-./scripts/setup.sh quick          # 設定ファイルのみ（依存関係は手動インストール済みと仮定）
-
-# 3. 検証
-./scripts/verify-setup.sh
-
-# 4. Flutter プロジェクト開始
-./scripts/flutter.sh create my_app
-cd my_app && nvim .
+# AstroNvimフルセットアップ（ワンコマンド！）
+./scripts/setup.sh astronvim-full
 ```
 
-## 📋 主要コマンド
+この1つのコマンドで：
+1. 既存のNeovim設定をバックアップ
+2. AstroNvimをカスタム設定でインストール
+3. すべての言語サーバーと開発ツールをセットアップ
+4. AIアシスタント（Copilot、ChatGPT、Avante）を設定
+5. すべてのプラグインをインストール・設定
 
-### Flutter開発
-- `<leader>fr` - Flutter実行
-- `<leader>fh` - ホットリロード  
-- `<leader>fd` - デバイス一覧
-- `<F5>` - デバッグ開始
-- `<F1>` - ステップイン
-- `<F2>` - ステップオーバー
+### その他のインストールオプション
 
-### Git操作
-- `]c` / `[c` - hunk移動
-- `<leader>hs` - hunkステージ
-- `<leader>hp` - hunkプレビュー
-- `<leader>hb` - blame表示
+```bash
+# 基本的なAstroNvim移行（設定のみ）
+./scripts/setup.sh astronvim
+
+# Claude Code完全統合（NEW!）
+./scripts/setup.sh claude-integration
+
+# 従来のNeovimセットアップ（レガシー）
+./scripts/setup.sh --full
+
+# 個別コンポーネント
+./scripts/setup.sh mcp-only      # MCPサーバーのみ
+./scripts/setup.sh kiro-only     # Kiroコマンドのみ
+./scripts/setup.sh serena-only   # Serena MCPのみ
+```
+
+## 🎯 インストール後のセットアップ
+
+### 1. Neovimを起動
+```bash
+nvim
+```
+プラグインが自動的にインストールされます（初回起動時のみ）。
+
+### 2. 言語サーバーをインストール
+Neovim内で実行：
+```vim
+:MasonInstall dartls tsserver pyright tailwindcss
+```
+
+### 3. AIツールをセットアップ
+```vim
+" GitHub Copilot
+:Copilot setup
+:Copilot enable
+
+" ChatGPT/Avanteの場合、環境変数を設定：
+" export OPENAI_API_KEY='your-key'
+" export ANTHROPIC_API_KEY='your-key'
+```
+
+## ⌨️ 主要なキーマッピング
+
+### 基本操作
+| キー | 説明 |
+|-----|------|
+| `<Space>` | リーダーキー |
+| `<Space>ff` | ファイル検索 |
+| `<Space>fg` | テキスト検索（grep） |
+| `<Space>fb` | バッファ検索 |
+| `<Space>e` | ファイルエクスプローラー |
 
 ### AI機能
-- `Alt+l` - Copilot提案受け入れ
-- `<leader>cc` - Copilotチャット
-- `<leader>clc` - Claude トグル
-- `<leader>clo` - Claude 開く
+| キー | 説明 |
+|-----|------|
+| `<Tab>` | AI提案を受け入れ |
+| `<Space>aa` | AI質問（Avante） |
+| `<Space>acc` | Copilotチャット |
+| `<Space>agg` | ChatGPT |
+| `<M-]>` / `<M-[>` | 次/前の提案 |
 
-### 検索・ナビゲーション
-- `<leader>ff` - ファイル検索
-- `<leader>fg` - テキスト検索
-- `<leader>fd` - 診断検索
-- `s` - Flash 2文字ジャンプ
-- `<leader>e` - ファイルツリー
+### LSP機能
+| キー | 説明 |
+|-----|------|
+| `gd` | 定義へジャンプ |
+| `gr` | 参照を表示 |
+| `K` | ホバー情報表示 |
+| `<Space>la` | コードアクション |
+| `<Space>lf` | コードフォーマット |
+| `<Space>lr` | シンボルリネーム |
 
-### IDE操作
-- `<leader>is` - 3分割IDEレイアウト起動
-- `<leader>w1/2/3` - ウィンドウ1/2/3へ移動
-- `<leader>qq` - IDE全体を終了
-- `<leader>wqa` - 全て保存して終了
+### Flutter開発
+| キー | 説明 |
+|-----|------|
+| `<Space>Fa` | Flutterアプリ実行 |
+| `<Space>Fr` | Flutterリロード |
+| `<Space>Fq` | Flutter終了 |
+| `<Space>Fd` | Flutterデバイス |
 
-### Markdown
-- `<leader>mr` - Markdownレンダリング切り替え
-- `<leader>me` - Markdownレンダリング有効化
-- `<leader>md` - Markdownレンダリング無効化
+## 🔌 Claude Code統合
+
+### Serena MCPによるセマンティックコード操作
+- **セマンティック検索**: シンボル、定義、参照の高度な検索
+- **コードナビゲーション**: 言語サーバーベースの正確な移動
+- **リファクタリング**: シンボルのリネーム、自動編集
+- **プロジェクト管理**: プロジェクト固有の設定対応
+
+### ヘルパーコマンド
+```bash
+# MCPサーバー管理
+claude-mcp list    # サーバー一覧と接続状態
+claude-mcp test    # 接続テスト
+claude-mcp fix     # 設定修正
+
+# プロジェクト設定
+activate-project   # 現在のディレクトリでSerena有効化
+```
+
+### セットアップ
+```bash
+# Claude Code完全統合のインストール
+./scripts/setup.sh claude-integration
+
+# 環境変数設定（~/.zshrc.localに追加）
+export GITHUB_PERSONAL_ACCESS_TOKEN='your-token'
+```
+
+## 📁 プロジェクト構造
+
+```
+my-nvim-config/
+├── scripts/
+│   ├── setup.sh                 # メインセットアップスクリプト
+│   ├── migrate-to-astronvim.sh  # AstroNvim移行
+│   ├── astronvim-post-setup.sh  # インストール後セットアップ
+│   ├── setup-ai-tools.sh        # AIツール設定
+│   └── mcp.sh                   # MCPサーバーセットアップ
+├── astronvim-configs/
+│   └── lua/plugins/
+│       └── ai.lua               # AIプラグイン設定
+├── claude/                      # Claude Desktop設定
+├── zsh/                         # Zsh設定
+├── starship.toml               # Starshipプロンプト設定
+└── README.md                   # このファイル
+```
 
 ## 📚 詳細ドキュメント
 
-- **[DOCS.md](DOCS.md)** - 完全ガイド（セットアップ、ワークフロー、キーバインド）
-- **[FLUTTER_KEYBINDINGS.md](FLUTTER_KEYBINDINGS.md)** - 全キーバインドリファレンス
-- **[CLAUDE.md](CLAUDE.md)** - AI開発者向け技術詳細
-- **[MCP_SETUP.md](MCP_SETUP.md)** - MCP（Model Context Protocol）設定ガイド
+- **[ASTRONVIM_MIGRATION.md](ASTRONVIM_MIGRATION.md)** - AstroNvim移行ガイド
+- **[CLAUDE.md](CLAUDE.md)** - Claude Code統合ガイド  
+- **[MCP_SETUP.md](MCP_SETUP.md)** - MCPサーバー設定
 - **[TROUBLESHOOTING.md](TROUBLESHOOTING.md)** - トラブルシューティング
 
 ## 🔧 システム要件
@@ -112,54 +206,71 @@ cd my_app && nvim .
 - **pnpm**: ワークスペース対応パッケージマネージャー設定
 - **Scripts**: 整理された開発ツール（setup.sh、flutter.sh、pnpm.sh、mcp.sh）
 
-## 🔧 セットアップオプション
+## 🛠️ 環境変数の設定
 
-### メインセットアップ（setup.sh）
+`~/.zshrc.local`または`~/.bashrc.local`を作成：
+
 ```bash
-./scripts/setup.sh              # 設定ファイルのみ（安全なデフォルト）
-./scripts/setup.sh --full       # 全機能インストール
-./scripts/setup.sh quick        # 設定ファイルのみ
-./scripts/setup.sh starship-only # Starshipのみ
-./scripts/setup.sh pnpm-only    # pnpmのみ
-./scripts/setup.sh mcp-only     # MCPサーバーのみ
+# AI APIキー
+export OPENAI_API_KEY='your-openai-key'
+export ANTHROPIC_API_KEY='your-anthropic-key'
+
+# GitHubトークン（MCP用）
+export GITHUB_PERSONAL_ACCESS_TOKEN='your-github-token'
+
+# Flutter（オプション）
+export PATH="$PATH:$HOME/flutter/bin"
 ```
 
-オプション：
-- `--no-starship` - Starshipをスキップ
-- `--no-flutter` - Flutterをスキップ
-- `--no-pnpm` - pnpmをスキップ
-- `--dry-run` - 実行内容の確認のみ
+## 🔄 更新方法
 
-### ユーティリティスクリプト
 ```bash
-# Flutter開発
-./scripts/flutter.sh create myapp  # 新規プロジェクト作成
-./scripts/flutter.sh setup         # 既存プロジェクトセットアップ
-./scripts/flutter.sh test          # テスト実行
-./scripts/flutter.sh build apk     # ビルド
+# AstroNvimとプラグインを更新
+nvim
+:Lazy sync
 
-# パッケージマネージャー
-./scripts/pnpm.sh install   # pnpmインストール
-./scripts/pnpm.sh migrate   # npm/yarnからの移行
-
-# MCP設定
-./scripts/mcp.sh            # アダプティブMCPセットアップ
+# 言語サーバーを更新
+:MasonUpdate
 ```
 
-## 📦 pnpmワークスペース
+## 🔙 以前の設定に戻す
 
-JavaScript/TypeScriptプロジェクト用のワークスペース構造：
+設定を復元する場合：
+
+```bash
+# バックアップを探す
+ls -la ~/.config/ | grep nvim-backup
+
+# 復元
+rm -rf ~/.config/nvim
+mv ~/.config/nvim-backup-TIMESTAMP ~/.config/nvim
 ```
-packages/    # 共有パッケージ
-apps/        # アプリケーション
-tools/       # 開発ツール
-examples/    # サンプルプロジェクト
-```
+
+## 🛟 トラブルシューティング
+
+### よくある問題
+
+1. **プラグインが読み込まれない**
+   ```vim
+   :Lazy sync
+   :checkhealth
+   ```
+
+2. **LSPが動作しない**
+   ```vim
+   :LspInfo
+   :Mason
+   ```
+
+3. **AI機能が動作しない**
+   - APIキーが正しく設定されているか確認
+   - GitHub Copilotの場合は `:Copilot setup` を実行
+   - ネットワーク接続を確認
 
 ## 🤝 貢献
 
-Issue報告やPull Requestを歓迎します。
+改善のための Issue や Pull Request を歓迎します。
 
 ## 📄 ライセンス
 
-MIT License
+MIT License - 詳細は [LICENSE](LICENSE) ファイルを参照してください。

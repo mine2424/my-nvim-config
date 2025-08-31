@@ -10,11 +10,12 @@
         "GITHUB_PERSONAL_ACCESS_TOKEN": "${GITHUB_PERSONAL_ACCESS_TOKEN}"
       }
     },
-    "context7": {
+    "filesystem": {
       "command": "npx",
       "args": [
         "-y",
-        "@context7/mcp-server"
+        "@modelcontextprotocol/server-filesystem",
+        "/Users/mine/development"
       ]
     },
     "playwright": {

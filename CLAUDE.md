@@ -86,7 +86,7 @@ The configuration includes a simplified 3-panel IDE layout that provides an effi
 # Default setup (config files only - safe default)
 ./scripts/setup.sh
 
-# Full automated setup (includes all components)
+# Full automated setup (includes all components with MCP fix)
 # Note: This now includes Rust/cargo for building avante.nvim
 ./scripts/setup.sh --full
 
@@ -95,6 +95,10 @@ The configuration includes a simplified 3-panel IDE layout that provides an effi
 ./scripts/setup.sh starship-only  # Starship only
 ./scripts/setup.sh config-only    # Config files only (same as default)
 ./scripts/setup.sh quick          # Quick setup (configs only)
+./scripts/setup.sh mcp-only       # Install MCP servers with automatic fix
+./scripts/setup.sh mcp-fix        # Fix MCP server connections
+./scripts/setup.sh serena-only    # Install Serena MCP only
+./scripts/setup.sh kiro-only      # Install Kiro command only
 
 # Manual verification
 ./scripts/verify-setup.sh
@@ -307,6 +311,36 @@ The `scripts/setup.sh` automatically installs:
 - Deny check script with proper permissions
 - Both configurations are backed up during installation
 
+## Claude Code Complete Integration 🚀
+
+### Quick Setup
+```bash
+# Complete Claude Code integration with Serena MCP
+./scripts/setup.sh claude-integration
+```
+
+This single command sets up:
+- ✅ Serena MCP for semantic code operations
+- ✅ All MCP servers (GitHub, Filesystem, Playwright, Debug Thinking)
+- ✅ Claude Code safety settings
+- ✅ Neovim integration
+- ✅ Helper commands
+- ✅ Environment configuration
+
+### Helper Commands
+After installation, these commands are available:
+
+```bash
+# MCP Server Management
+claude-mcp list    # List servers and connection status
+claude-mcp test    # Test MCP connections
+claude-mcp fix     # Fix and reconfigure servers
+claude-mcp serena  # Run Serena commands
+
+# Project Management
+activate-project   # Activate Serena for current directory
+```
+
 ## MCP (Model Context Protocol) Integration
 
 The project includes MCP server configurations for extending Claude Code capabilities:
@@ -316,21 +350,52 @@ The project includes MCP server configurations for extending Claude Code capabil
 - **Context7 MCP**: Enhanced context management and memory persistence
 - **Playwright MCP**: Web automation, scraping, and browser testing
 - **Debug Thinking MCP**: Enhanced debugging and thought process visualization
+- **Serena MCP**: Powerful semantic code retrieval and editing with language server integration
 
 ### MCP Configuration Files
 - `claude/mcp_config.json` - Basic MCP server definitions
 - `claude/mcp_servers_detailed.json` - Detailed configuration with descriptions
-- `scripts/setup-mcp.sh` - Automated MCP setup script
+- `claude/serena_config.yml` - Serena MCP global configuration
+- `claude/serena_project_template.yml` - Template for project-specific Serena configuration
+- `scripts/mcp.sh` - Adaptive MCP setup script with intelligent path detection
+- `scripts/setup-serena.sh` - Serena MCP specific setup script
 
 ### MCP Setup
-The adaptive MCP configuration is automatically installed with the main setup script:
+The adaptive MCP configuration is automatically installed with the main setup script and configures MCP servers in Claude Code **user settings** (global scope) by default:
+
 ```bash
-./scripts/setup.sh  # Includes adaptive MCP setup (config-only mode)
-./scripts/setup.sh --full  # Includes adaptive MCP setup with full installation
-# or
-./scripts/setup-mcp-adaptive.sh  # Adaptive MCP setup only (recommended)
-./scripts/setup-mcp.sh  # Legacy MCP setup (fallback)
+# Automatic MCP setup with user scope (global settings)
+./scripts/setup.sh --full       # Full setup (includes MCP with user scope)
+./scripts/setup.sh mcp-only     # Install and fix MCP servers in user settings
+./scripts/setup.sh mcp-fix      # Fix existing MCP connections in user settings
+
+# Direct MCP management with scope control
+./scripts/mcp.sh --fix --no-test --user   # Configure in user settings (global)
+./scripts/mcp.sh --fix --no-test --local  # Configure in project settings
+
+# Individual server installation
+./scripts/setup.sh serena-only  # Install Serena MCP in user settings
+./scripts/setup-serena.sh       # Direct Serena installation
 ```
+
+#### MCP Configuration Scope
+- **User Scope (Default)**: MCP servers are configured globally in Claude Code user settings
+  - Available across all projects and workspaces
+  - Settings persist between Claude Code sessions
+  - Use `--user` flag or default behavior
+- **Local Scope**: MCP servers configured for specific project
+  - Only available in current project/workspace
+  - Use `--local` flag explicitly
+
+#### Troubleshooting MCP Connections
+If MCP servers show "Failed to connect":
+1. Run `./scripts/setup.sh mcp-fix` to automatically fix connections in user settings
+2. Or use `./scripts/mcp.sh --fix --no-test --user` directly
+3. This will:
+   - Remove all existing MCP configurations
+   - Configure servers in user scope (globally)
+   - Servers are configured but not executed during setup
+   - Test connections manually with: `claude mcp list`
 
 The adaptive MCP setup intelligently detects MCP server installations:
 - Environment variable overrides (MCP_*_PATH)
@@ -339,6 +404,39 @@ The adaptive MCP setup intelligently detects MCP server installations:
 - Homebrew installations
 - Local npm installations
 - Falls back to npx for dynamic installation
+
+### Serena MCP Features
+Serena provides powerful semantic code operations through language server integration:
+
+#### Supported Languages
+- **Python**: Via `pylsp` with full IntelliSense
+- **TypeScript/JavaScript**: Via `typescript-language-server`
+- **Rust**: Via `rust-analyzer`
+- **Go**: Via `gopls`
+- **PHP**: Via Intelephense (optional premium features)
+
+#### Available Tools
+- `get_file_tree`: Navigate project structure semantically
+- `get_file_content`: Retrieve file content with syntax awareness
+- `get_references`: Find all references to symbols
+- `get_definitions`: Jump to symbol definitions
+- `get_implementations`: Find interface implementations
+- `search_symbol`: Search for symbols across the codebase
+- `apply_edits`: Apply semantic code edits
+- `rename_symbol`: Rename symbols with automatic refactoring
+
+#### Serena Configuration
+1. **Global Config**: `~/.serena/serena_config.yml` - Language server settings
+2. **Project Config**: `.serena/project.yml` - Project-specific overrides
+3. **Templates**: `~/.serena/templates/project.yml` - Template for new projects
+
+#### Usage with Claude
+Once installed, Serena MCP will be available in Claude Desktop, providing:
+- Semantic code navigation and understanding
+- Intelligent refactoring capabilities
+- Language-aware code edits
+- Symbol search and references
+- Multi-language support in mixed projects
 
 ### pnpm Setup
 pnpm is integrated into the main setup workflow:
@@ -360,6 +458,21 @@ export GITHUB_PERSONAL_ACCESS_TOKEN='your-token-here'
 ```
 
 See `MCP_SETUP.md` for detailed configuration and usage instructions.
+
+## Claude Code Neovim Integration
+
+The configuration includes the `claude-code.nvim` plugin for seamless integration:
+
+### Features
+- **Per-worktree session management**: Separate Claude sessions for Git worktrees
+- **Auto-session switching**: Automatically switches to relevant session
+- **Session monitoring**: Real-time monitoring of Claude sessions
+- **Keybindings**:
+  - `<leader>clc` - Toggle Claude
+  - `<leader>clo` - Open Claude
+  - `<leader>cll` - Show sessions
+  - `<leader>clm` - Monitor sessions
+  - `<leader>clw` - Switch worktree
 
 ## Claude Code Usage Monitor Integration
 

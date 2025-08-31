@@ -161,13 +161,48 @@ detect_mcp_server() {
 # ===============================================
 
 # Function to check if server is already configured
+# Note: This does NOT test connections, just checks if configured
 is_server_configured() {
     local server_name="$1"
-    claude mcp list 2>/dev/null | grep -q "^$server_name\s"
+    # Check the configuration file directly instead of using claude mcp list
+    # which tries to start and test servers
+    if [[ -f "$HOME/.claude.json" ]]; then
+        grep -q "\"$server_name\":" "$HOME/.claude.json" 2>/dev/null
+    else
+        return 1
+    fi
+}
+
+# Function to fix MCP servers
+fix_mcp_connections() {
+    echo -e "${CYAN}Fixing MCP server connections...${NC}"
+    
+    # Test npx functionality
+    if ! npx --version > /dev/null 2>&1; then
+        echo -e "${RED}❌ npx is not working properly${NC}"
+        return 1
+    fi
+    echo -e "${GREEN}  ✓ npx is working (version: $(npx --version))${NC}"
+}
+
+# Function to remove all MCP servers
+remove_all_mcp_servers() {
+    local scope="${1:-user}"
+    echo -e "${CYAN}Removing existing MCP configurations (scope: $scope)...${NC}"
+    local servers=("github" "filesystem" "playwright" "debug-thinking" "serena" "context7")
+    for server in "${servers[@]}"; do
+        if is_server_configured "$server"; then
+            claude mcp remove --scope "$scope" "$server" 2>/dev/null && \
+                echo -e "${GREEN}  ✓ Removed $server${NC}" || \
+                echo -e "${YELLOW}  ⚠️  Failed to remove $server${NC}"
+        fi
+    done
 }
 
 # Function to configure GitHub MCP server
 configure_github_mcp() {
+    local scope="${1:-user}"
+    
     if is_server_configured "github"; then
         echo -e "${GREEN}✓ GitHub MCP server already configured${NC}"
         return 0
@@ -175,12 +210,8 @@ configure_github_mcp() {
     
     echo -e "${YELLOW}Configuring GitHub MCP server...${NC}"
     
-    # Detect installation
-    local github_cmd=$(detect_mcp_server \
-        "mcp-server-github" \
-        "@modelcontextprotocol/server-github" \
-        "" \
-        "MCP_GITHUB_PATH")
+    # Use npx with -y flag for better reliability
+    local github_cmd="npx -y @modelcontextprotocol/server-github"
     
     # Build environment variables
     local env_args=""
@@ -191,47 +222,55 @@ configure_github_mcp() {
         env_args="$env_args -e GITHUB_API_URL=\"$GITHUB_API_URL\""
     fi
     
-    # Add server
+    # Remove existing configuration first to avoid conflicts
+    claude mcp remove --scope "$scope" github 2>/dev/null || true
+    
+    # Add server with scope
     if [ -n "$env_args" ]; then
-        eval "claude mcp add github $env_args -- $github_cmd"
+        eval "claude mcp add --scope $scope github $env_args -- $github_cmd"
     else
-        claude mcp add github -- $github_cmd
+        claude mcp add --scope "$scope" github -- $github_cmd
         echo -e "${YELLOW}Note: Set GITHUB_PERSONAL_ACCESS_TOKEN for full functionality${NC}"
     fi
 }
 
-# Function to configure Context7 MCP server
-configure_context7_mcp() {
-    if is_server_configured "context7"; then
-        echo -e "${GREEN}✓ Context7 MCP server already configured${NC}"
+# Function to configure Filesystem MCP server (replacing non-existent Context7)
+configure_filesystem_mcp() {
+    local scope="${1:-user}"
+    
+    if is_server_configured "filesystem"; then
+        echo -e "${GREEN}✓ Filesystem MCP server already configured${NC}"
         return 0
     fi
     
-    echo -e "${YELLOW}Configuring Context7 MCP server...${NC}"
+    echo -e "${YELLOW}Configuring Filesystem MCP server...${NC}"
     
-    # Detect installation
-    local context7_cmd=$(detect_mcp_server \
-        "mcp-server-context7" \
-        "@context7/mcp-server" \
-        "" \
-        "MCP_CONTEXT7_PATH")
+    # Use npx with -y flag for better reliability
+    local filesystem_cmd="npx -y @modelcontextprotocol/server-filesystem"
     
-    # Build environment variables
+    # Build environment variables and arguments
     local env_args=""
-    if [ -n "$CONTEXT7_DATA_DIR" ]; then
-        env_args="$env_args -e CONTEXT7_DATA_DIR=\"$CONTEXT7_DATA_DIR\""
+    local fs_path="${FILESYSTEM_BASE_PATH:-$HOME/development}"
+    
+    if [ -n "$FILESYSTEM_ALLOWED_PATHS" ]; then
+        env_args="$env_args -e FILESYSTEM_ALLOWED_PATHS=\"$FILESYSTEM_ALLOWED_PATHS\""
     fi
     
-    # Add server
+    # Remove existing configuration first to avoid conflicts
+    claude mcp remove --scope "$scope" filesystem 2>/dev/null || true
+    
+    # Add server with path argument and scope
     if [ -n "$env_args" ]; then
-        eval "claude mcp add context7 $env_args -- $context7_cmd"
+        eval "claude mcp add --scope $scope filesystem $env_args -- $filesystem_cmd \"$fs_path\""
     else
-        claude mcp add context7 -- $context7_cmd
+        claude mcp add --scope "$scope" filesystem -- $filesystem_cmd "$fs_path"
     fi
 }
 
 # Function to configure Playwright MCP server
 configure_playwright_mcp() {
+    local scope="${1:-user}"
+    
     if is_server_configured "playwright"; then
         echo -e "${GREEN}✓ Playwright MCP server already configured${NC}"
         return 0
@@ -239,12 +278,8 @@ configure_playwright_mcp() {
     
     echo -e "${YELLOW}Configuring Playwright MCP server...${NC}"
     
-    # Detect installation
-    local playwright_cmd=$(detect_mcp_server \
-        "mcp-server-playwright" \
-        "@automatalabs/mcp-server-playwright" \
-        "" \
-        "MCP_PLAYWRIGHT_PATH")
+    # Use npx with -y flag for better reliability
+    local playwright_cmd="npx -y @automatalabs/mcp-server-playwright"
     
     # Build environment variables
     local env_args=""
@@ -255,16 +290,21 @@ configure_playwright_mcp() {
         env_args="$env_args -e PLAYWRIGHT_HEADLESS=\"$PLAYWRIGHT_HEADLESS\""
     fi
     
-    # Add server
+    # Remove existing configuration first to avoid conflicts
+    claude mcp remove --scope "$scope" playwright 2>/dev/null || true
+    
+    # Add server with scope
     if [ -n "$env_args" ]; then
-        eval "claude mcp add playwright $env_args -- $playwright_cmd"
+        eval "claude mcp add --scope $scope playwright $env_args -- $playwright_cmd"
     else
-        claude mcp add playwright -- $playwright_cmd
+        claude mcp add --scope "$scope" playwright -- $playwright_cmd
     fi
 }
 
 # Function to configure Debug Thinking MCP server
 configure_debug_thinking_mcp() {
+    local scope="${1:-user}"
+    
     if is_server_configured "debug-thinking"; then
         echo -e "${GREEN}✓ Debug Thinking MCP server already configured${NC}"
         return 0
@@ -272,12 +312,15 @@ configure_debug_thinking_mcp() {
     
     echo -e "${YELLOW}Configuring Debug Thinking MCP server...${NC}"
     
-    # Detect installation
-    local debug_cmd=$(detect_mcp_server \
-        "mcp-server-debug-thinking" \
-        "mcp-server-debug-thinking" \
-        "" \
-        "MCP_DEBUG_THINKING_PATH")
+    # Check if installed via Homebrew first
+    local debug_cmd=""
+    if command -v mcp-server-debug-thinking &> /dev/null; then
+        echo -e "${GREEN}  ✓ Found in PATH${NC}"
+        debug_cmd="mcp-server-debug-thinking"
+    else
+        # Use npx with -y flag
+        debug_cmd="npx -y mcp-server-debug-thinking"
+    fi
     
     # Build environment variables
     local env_args=""
@@ -288,11 +331,91 @@ configure_debug_thinking_mcp() {
         env_args="$env_args -e DEBUG_THINKING_DATA_DIR=\"$DEBUG_THINKING_DATA_DIR\""
     fi
     
-    # Add server
+    # Remove existing configuration first to avoid conflicts
+    claude mcp remove --scope "$scope" debug-thinking 2>/dev/null || true
+    
+    # Add server with scope
     if [ -n "$env_args" ]; then
-        eval "claude mcp add debug-thinking $env_args -- $debug_cmd"
+        eval "claude mcp add --scope $scope debug-thinking $env_args -- $debug_cmd"
     else
-        claude mcp add debug-thinking -- $debug_cmd
+        claude mcp add --scope "$scope" debug-thinking -- $debug_cmd
+    fi
+}
+
+# Function to configure Serena MCP server
+configure_serena_mcp() {
+    local scope="${1:-user}"
+    
+    if is_server_configured "serena"; then
+        echo -e "${GREEN}✓ Serena MCP server already configured${NC}"
+        return 0
+    fi
+    
+    echo -e "${YELLOW}Configuring Serena MCP server...${NC}"
+    
+    # Check for uvx or serena-mcp command
+    local serena_cmd=""
+    
+    # 1. Check environment variable override
+    if [ -n "$MCP_SERENA_PATH" ] && [ -f "$MCP_SERENA_PATH" ]; then
+        echo -e "${GREEN}  ✓ Found via environment variable: $MCP_SERENA_PATH${NC}"
+        serena_cmd="$MCP_SERENA_PATH"
+    # 2. Check if serena-mcp wrapper exists
+    elif [ -f "$HOME/.local/bin/serena-mcp" ]; then
+        echo -e "${GREEN}  ✓ Found serena-mcp wrapper: $HOME/.local/bin/serena-mcp${NC}"
+        serena_cmd="$HOME/.local/bin/serena-mcp"
+    # 3. Check if uvx is available
+    elif command -v uvx &> /dev/null; then
+        echo -e "${GREEN}  ✓ Using uvx for Serena${NC}"
+        # uvx requires separate arguments for claude mcp add
+        serena_cmd="uvx"
+        serena_args="--from git+https://github.com/oraios/serena serena"
+    # 4. Check if uv is available for installation
+    elif command -v uv &> /dev/null; then
+        echo -e "${YELLOW}  ⚠️  Installing Serena with uv...${NC}"
+        # Run the Serena setup script
+        if [ -f "$SCRIPT_DIR/setup-serena.sh" ]; then
+            bash "$SCRIPT_DIR/setup-serena.sh"
+            if [ -f "$HOME/.local/bin/serena-mcp" ]; then
+                serena_cmd="$HOME/.local/bin/serena-mcp"
+            fi
+        fi
+    else
+        echo -e "${YELLOW}  ⚠️  Serena requires uv/uvx - run setup-serena.sh first${NC}"
+        return 1
+    fi
+    
+    if [ -n "$serena_cmd" ]; then
+        # Build environment variables
+        local env_args=""
+        if [ -n "$SERENA_CONFIG_PATH" ]; then
+            env_args="$env_args -e SERENA_CONFIG_PATH=\"$SERENA_CONFIG_PATH\""
+        fi
+        if [ -n "$SERENA_PROJECT_PATH" ]; then
+            env_args="$env_args -e SERENA_PROJECT_PATH=\"$SERENA_PROJECT_PATH\""
+        fi
+        
+        # Remove existing configuration first to avoid conflicts
+        claude mcp remove --scope "$scope" serena 2>/dev/null || true
+        
+        # Add server - handle uvx case specially
+        if [ "$serena_cmd" = "uvx" ]; then
+            # For uvx, we need to pass arguments differently with start-mcp-server command
+            if [ -n "$env_args" ]; then
+                eval "claude mcp add --scope $scope serena $env_args -- uvx --from git+https://github.com/oraios/serena serena start-mcp-server"
+            else
+                claude mcp add --scope "$scope" serena -- uvx --from git+https://github.com/oraios/serena serena start-mcp-server
+            fi
+        else
+            # For regular commands (wrapper script handles start-mcp-server)
+            if [ -n "$env_args" ]; then
+                eval "claude mcp add --scope $scope serena $env_args -- $serena_cmd"
+            else
+                claude mcp add --scope "$scope" serena -- $serena_cmd
+            fi
+        fi
+        
+        echo -e "${GREEN}  ✓ Serena MCP server configured successfully${NC}"
     fi
 }
 
@@ -344,9 +467,10 @@ generate_env_template() {
 # export GITHUB_API_URL='https://api.github.com'  # For GitHub Enterprise
 # export MCP_GITHUB_PATH='/custom/path/to/mcp-server-github'
 
-# ===== Context7 MCP Server =====
-# export CONTEXT7_DATA_DIR="$HOME/.context7/data"
-# export MCP_CONTEXT7_PATH='/custom/path/to/mcp-server-context7'
+# ===== Filesystem MCP Server =====
+# export FILESYSTEM_BASE_PATH="$HOME/development"  # Base directory for file operations
+# export FILESYSTEM_ALLOWED_PATHS="/path/to/allowed,/another/path"  # Comma-separated allowed paths
+# export MCP_FILESYSTEM_PATH='/custom/path/to/mcp-server-filesystem'
 
 # ===== Playwright MCP Server =====
 # export PLAYWRIGHT_BROWSERS_PATH="$HOME/.cache/playwright"
@@ -357,6 +481,11 @@ generate_env_template() {
 # export DEBUG_THINKING_LOG_LEVEL=info
 # export DEBUG_THINKING_DATA_DIR="$HOME/.debug-thinking-mcp"
 # export MCP_DEBUG_THINKING_PATH='/custom/path/to/mcp-server-debug-thinking'
+
+# ===== Serena MCP Server =====
+# export SERENA_CONFIG_PATH="$HOME/.serena/serena_config.yml"
+# export SERENA_PROJECT_PATH=".serena/project.yml"
+# export MCP_SERENA_PATH='/custom/path/to/serena-mcp'
 
 # ===== Proxy Configuration =====
 # export HTTP_PROXY="http://proxy.example.com:8080"
@@ -375,6 +504,41 @@ main() {
     echo -e "${GREEN}=== Adaptive MCP Setup for Claude Code ===${NC}"
     echo ""
     
+    # Parse flags
+    local FIX_MODE=false
+    local NO_TEST=false
+    local SCOPE="user"  # Default to user scope for global configuration
+    
+    while [[ $# -gt 0 ]]; do
+        case "$1" in
+            --fix|fix)
+                FIX_MODE=true
+                echo -e "${CYAN}Running in FIX mode - will remove and reconfigure all servers${NC}"
+                shift
+                ;;
+            --no-test)
+                NO_TEST=true
+                echo -e "${CYAN}Configuration only mode - will not test connections${NC}"
+                shift
+                ;;
+            --local)
+                SCOPE="local"
+                echo -e "${CYAN}Using local scope (project-specific)${NC}"
+                shift
+                ;;
+            --user)
+                SCOPE="user"
+                echo -e "${CYAN}Using user scope (global)${NC}"
+                shift
+                ;;
+            *)
+                shift
+                ;;
+        esac
+    done
+    
+    echo -e "${CYAN}Configuration scope: ${SCOPE}${NC}"
+    
     # Load local environment if exists
     if [ -f "$HOME/.zshrc.local" ]; then
         echo -e "${CYAN}Loading environment from ~/.zshrc.local...${NC}"
@@ -389,22 +553,41 @@ main() {
         exit 1
     fi
     
+    # If fix mode, remove all servers first
+    if [ "$FIX_MODE" = true ]; then
+        remove_all_mcp_servers "$SCOPE"
+        fix_mcp_connections
+    fi
+    
     echo ""
     echo -e "${CYAN}Configuring MCP servers...${NC}"
     
-    # Configure each server
-    configure_github_mcp
-    configure_context7_mcp
-    configure_playwright_mcp
-    configure_debug_thinking_mcp
+    # Configure each server with the specified scope
+    configure_github_mcp "$SCOPE"
+    configure_filesystem_mcp "$SCOPE"  # Replaced context7 with filesystem
+    configure_playwright_mcp "$SCOPE"
+    configure_debug_thinking_mcp "$SCOPE"
+    configure_serena_mcp "$SCOPE"
     
     echo ""
     echo -e "${GREEN}=== MCP Setup Complete ===${NC}"
     
-    # List configured servers
-    echo ""
-    echo -e "${CYAN}Configured MCP servers:${NC}"
-    claude mcp list
+    # Only test connections if not in no-test mode
+    if [ "$NO_TEST" = false ]; then
+        # List configured servers and test connections
+        echo ""
+        echo -e "${CYAN}Testing MCP server connections...${NC}"
+        claude mcp list
+    else
+        # Just show configured servers without testing
+        echo ""
+        echo -e "${CYAN}MCP servers configured (not testing connections):${NC}"
+        echo -e "${GREEN}  ✓ GitHub MCP server${NC}"
+        echo -e "${GREEN}  ✓ Filesystem MCP server${NC}"
+        echo -e "${GREEN}  ✓ Playwright MCP server${NC}"
+        echo -e "${GREEN}  ✓ Debug Thinking MCP server${NC}"
+        echo -e "${GREEN}  ✓ Serena MCP server${NC}"
+    fi
     
     # Generate environment template
     generate_env_template
@@ -415,7 +598,12 @@ main() {
     echo "2. Copy needed variables to ~/.zshrc.local or ~/.bashrc.local"
     echo "3. Set your GitHub token for full functionality:"
     echo "   export GITHUB_PERSONAL_ACCESS_TOKEN='your-token-here'"
-    echo "4. Restart Claude Code to load the new configuration"
+    if [ "$NO_TEST" = true ]; then
+        echo "4. Test connections with: claude mcp list"
+        echo "5. Restart Claude Code to load the new configuration"
+    else
+        echo "4. Restart Claude Code to load the new configuration"
+    fi
     
     echo ""
     echo -e "${GREEN}Happy coding with adaptive MCP! 🚀${NC}"

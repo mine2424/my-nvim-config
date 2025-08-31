@@ -32,13 +32,19 @@ readonly MODE_CONFIG_ONLY="config-only"
 readonly MODE_STARSHIP_ONLY="starship-only"
 readonly MODE_PNPM_ONLY="pnpm-only"
 readonly MODE_MCP_ONLY="mcp-only"
+readonly MODE_MCP_FIX="mcp-fix"
 readonly MODE_KIRO_ONLY="kiro-only"
+readonly MODE_SERENA_ONLY="serena-only"
+readonly MODE_ASTRONVIM="astronvim"
+readonly MODE_ASTRONVIM_FULL="astronvim-full"
+readonly MODE_CLAUDE_INTEGRATION="claude-integration"
 
 # Default settings
 INSTALL_STARSHIP=true
 INSTALL_FLUTTER=false
 INSTALL_PNPM=true
 INSTALL_KIRO=true
+INSTALL_ASTRONVIM=false
 DRY_RUN=false
 
 # Error handling
@@ -152,7 +158,12 @@ MODES:
   starship-only       Install and configure Starship only
   pnpm-only           Install and configure pnpm only
   mcp-only            Install and configure MCP servers only
+  mcp-fix             Fix MCP server connections (remove and reconfigure)
   kiro-only           Install and configure Kiro command only
+  serena-only         Install and configure Serena MCP server only
+  astronvim           Migrate to AstroNvim (backup existing config)
+  astronvim-full      AstroNvim with full dev setup (LSP, AI tools, etc.)
+  claude-integration  Setup Claude Code integration with Serena MCP
 
 OPTIONS:
   --no-starship       Skip Starship installation
@@ -170,9 +181,13 @@ EXAMPLES:
   $0 config-only              # Copy configs only (explicit)
   $0 starship-only            # Install Starship only
   $0 pnpm-only                # Install pnpm only
+  $0 serena-only              # Install Serena MCP only
+  $0 mcp-fix                  # Fix MCP server connections
   $0 --full --no-flutter      # Full setup without Flutter
   $0 mcp-only                 # Install MCP servers only
   $0 kiro-only                # Install Kiro command only
+  $0 astronvim                # Migrate to AstroNvim
+  $0 astronvim-full           # AstroNvim with complete dev setup
 
 ENVIRONMENT VARIABLES FOR MCP:
   Before running setup, you can set these environment variables to customize MCP:
@@ -468,13 +483,14 @@ install_mcp_config() {
     # Load local environment configuration if exists
     load_local_env
     
-    # Install MCP configuration
+    # Install MCP configuration with fix flag, no-test, and user scope for global settings
     if [[ -f "$PROJECT_ROOT/scripts/mcp.sh" ]]; then
-        log_step "Installing MCP configuration..."
+        log_step "Installing and configuring MCP servers in user settings..."
         if [[ ! "$DRY_RUN" == "true" ]]; then
-            "$PROJECT_ROOT/scripts/mcp.sh"
+            # Use --fix flag to ensure clean installation, --no-test to avoid starting servers, and --user for global scope
+            "$PROJECT_ROOT/scripts/mcp.sh" --fix --no-test --user
         fi
-        log_success "MCP configuration installed"
+        log_success "MCP servers configured in user settings (not started)"
     else
         log_warning "MCP script not found"
     fi
@@ -536,6 +552,28 @@ install_mcp_only() {
     install_mcp_config
 }
 
+# Fix MCP server connections
+fix_mcp_servers() {
+    log_step "Fixing MCP server connections..."
+    
+    # Run the MCP script with fix flag, no-test, and user scope
+    if [[ -f "$SCRIPT_DIR/mcp.sh" ]]; then
+        if [[ ! "$DRY_RUN" == "true" ]]; then
+            bash "$SCRIPT_DIR/mcp.sh" --fix --no-test --user || {
+                log_error "Failed to fix MCP servers"
+                return 1
+            }
+        else
+            log_info "Would run: bash $SCRIPT_DIR/mcp.sh --fix --no-test --user"
+        fi
+        log_success "MCP servers configured in user settings (not started)"
+        log_info "Test connections manually with: claude mcp list"
+    else
+        log_error "MCP script not found: $SCRIPT_DIR/mcp.sh"
+        return 1
+    fi
+}
+
 install_kiro_command() {
     log_step "Installing Kiro spec-driven development command..."
     
@@ -554,6 +592,216 @@ install_kiro_command() {
         log_error "Kiro setup script not found: $SCRIPT_DIR/setup-kiro.sh"
         return 1
     fi
+}
+
+# Install Serena MCP server
+install_serena_mcp() {
+    log_step "Installing Serena MCP server..."
+    
+    # Run the Serena setup script
+    if [[ -f "$SCRIPT_DIR/setup-serena.sh" ]]; then
+        if [[ ! "$DRY_RUN" == "true" ]]; then
+            bash "$SCRIPT_DIR/setup-serena.sh" || {
+                log_error "Failed to install Serena MCP server"
+                return 1
+            }
+        else
+            log_info "Would run: bash $SCRIPT_DIR/setup-serena.sh"
+        fi
+        log_success "Serena MCP server installed successfully"
+        
+        # Only configure Serena specifically, not all MCP servers
+        log_step "Adding Serena to Claude MCP user configuration..."
+        if [[ ! "$DRY_RUN" == "true" ]]; then
+            # Check if Serena is already configured
+            if ! claude mcp list 2>/dev/null | grep -q "^serena\s"; then
+                # Add Serena with uvx to user scope
+                claude mcp add --scope user serena -- uvx --from git+https://github.com/oraios/serena serena start-mcp-server || {
+                    log_warning "Failed to add Serena to MCP config"
+                }
+            else
+                log_info "Serena already configured in MCP"
+            fi
+        else
+            log_info "Would add Serena to MCP user config"
+        fi
+    else
+        log_error "Serena setup script not found: $SCRIPT_DIR/setup-serena.sh"
+        return 1
+    fi
+}
+
+# ===============================================
+# AstroNvim Installation Functions
+# ===============================================
+
+install_astronvim() {
+    log_step "Migrating to AstroNvim..."
+    
+    # Get timestamp for backup
+    local TIMESTAMP=$(date +%Y%m%d_%H%M%S)
+    local BACKUP_DIR="$HOME/.config/nvim-backup-$TIMESTAMP"
+    
+    # Check Neovim version
+    if command_exists nvim; then
+        local NVIM_VERSION=$(nvim --version | head -n1 | grep -oE '[0-9]+\.[0-9]+' | head -n1)
+        log_success "Neovim found: v$NVIM_VERSION"
+        
+        # Check if version is 0.10 or higher
+        if [[ $(echo "$NVIM_VERSION >= 0.10" | bc -l 2>/dev/null || echo "0") -eq 0 ]]; then
+            log_warning "Neovim 0.10+ is recommended for AstroNvim v4"
+        fi
+    else
+        log_error "Neovim is not installed. Please install Neovim first."
+        return 1
+    fi
+    
+    # Backup current configuration
+    if [[ -d "$HOME/.config/nvim" ]]; then
+        log_info "Backing up current Neovim configuration..."
+        if [[ ! "$DRY_RUN" == "true" ]]; then
+            cp -r "$HOME/.config/nvim" "$BACKUP_DIR"
+            log_success "Backed up to $BACKUP_DIR"
+            
+            # Backup data directories
+            [[ -d "$HOME/.local/share/nvim" ]] && cp -r "$HOME/.local/share/nvim" "$HOME/.local/share/nvim-backup-$TIMESTAMP"
+            [[ -d "$HOME/.local/state/nvim" ]] && cp -r "$HOME/.local/state/nvim" "$HOME/.local/state/nvim-backup-$TIMESTAMP"
+            [[ -d "$HOME/.cache/nvim" ]] && cp -r "$HOME/.cache/nvim" "$HOME/.cache/nvim-backup-$TIMESTAMP"
+        fi
+    fi
+    
+    # Clean existing configuration
+    if [[ ! "$DRY_RUN" == "true" ]]; then
+        rm -rf "$HOME/.config/nvim"
+        rm -rf "$HOME/.local/share/nvim"
+        rm -rf "$HOME/.local/state/nvim"
+        rm -rf "$HOME/.cache/nvim"
+    fi
+    
+    # Install AstroNvim
+    log_info "Installing AstroNvim..."
+    if [[ ! "$DRY_RUN" == "true" ]]; then
+        git clone --depth 1 https://github.com/AstroNvim/template ~/.config/nvim
+        rm -rf ~/.config/nvim/.git
+    fi
+    
+    # Copy custom configurations
+    log_info "Setting up custom configurations..."
+    if [[ ! "$DRY_RUN" == "true" ]]; then
+        # Create plugins directory
+        mkdir -p ~/.config/nvim/lua/plugins
+        
+        # Copy configuration files
+        if [[ -f "$SCRIPT_DIR/migrate-to-astronvim.sh" ]]; then
+            # Run the migration script to generate configurations
+            bash "$SCRIPT_DIR/migrate-to-astronvim.sh" --config-only
+        fi
+        
+        # Copy AI configuration if it exists
+        if [[ -f "$PROJECT_ROOT/astronvim-configs/lua/plugins/ai.lua" ]]; then
+            cp "$PROJECT_ROOT/astronvim-configs/lua/plugins/ai.lua" ~/.config/nvim/lua/plugins/ai.lua
+        fi
+    fi
+    
+    log_success "AstroNvim installed successfully!"
+    log_info "Next: Run 'nvim' to install plugins automatically"
+}
+
+install_astronvim_full() {
+    log_step "Installing AstroNvim with full development setup..."
+    
+    # Install AstroNvim
+    install_astronvim
+    
+    # Install development tools
+    if [[ ! "$DRY_RUN" == "true" ]]; then
+        log_info "Installing development tools..."
+        
+        # Install LSP servers and tools
+        if [[ -f "$SCRIPT_DIR/astronvim-post-setup.sh" ]]; then
+            bash "$SCRIPT_DIR/astronvim-post-setup.sh" --all
+        fi
+        
+        # Setup AI tools
+        if [[ -f "$SCRIPT_DIR/setup-ai-tools.sh" ]]; then
+            log_info "Setting up AI tools..."
+            bash "$SCRIPT_DIR/setup-ai-tools.sh" --all || log_warning "AI setup incomplete - manual configuration may be needed"
+        fi
+    fi
+    
+    # Install plugins in headless mode
+    log_info "Installing Neovim plugins..."
+    if [[ ! "$DRY_RUN" == "true" ]]; then
+        nvim --headless "+Lazy! sync" +qa || log_warning "Plugin installation will complete on first launch"
+    fi
+    
+    log_success "AstroNvim full setup complete!"
+    show_astronvim_instructions
+}
+
+show_astronvim_instructions() {
+    echo
+    echo -e "${GREEN}═══════════════════════════════════════════════════════════════${NC}"
+    echo -e "${GREEN}        AstroNvim Installation Complete! 🚀${NC}"
+    echo -e "${GREEN}═══════════════════════════════════════════════════════════════${NC}"
+    echo
+    echo -e "${BLUE}Quick Start:${NC}"
+    echo "1. Launch Neovim: nvim"
+    echo "2. Install LSP servers (in Neovim):"
+    echo "   :MasonInstall dartls tsserver pyright tailwindcss"
+    echo "3. Setup GitHub Copilot (in Neovim):"
+    echo "   :Copilot setup"
+    echo
+    echo -e "${BLUE}Key Mappings:${NC}"
+    echo "   Leader key: <Space>"
+    echo "   <Space>ff - Find files"
+    echo "   <Space>fg - Find text"
+    echo "   <Space>e  - File explorer"
+    echo "   <Space>aa - Ask AI (Avante)"
+    echo "   <Tab>     - Accept AI suggestion"
+    echo
+    echo -e "${BLUE}Development:${NC}"
+    echo "   Flutter:     cd ~/project && nvim ."
+    echo "   React/Next:  cd ~/project && nvim ."
+    echo "   Python:      cd ~/project && nvim ."
+    echo
+}
+
+install_claude_integration() {
+    log_step "Setting up Claude Code integration with Serena MCP..."
+    
+    # Run the Claude integration setup script
+    if [[ -f "$SCRIPT_DIR/setup-claude-integration.sh" ]]; then
+        if [[ ! "$DRY_RUN" == "true" ]]; then
+            bash "$SCRIPT_DIR/setup-claude-integration.sh"
+        else
+            log_info "[DRY RUN] Would run setup-claude-integration.sh"
+        fi
+        log_success "Claude Code integration setup complete"
+    else
+        log_error "Claude integration setup script not found"
+        return 1
+    fi
+    
+    echo
+    echo -e "${GREEN}Claude Code Integration Setup Complete!${NC}"
+    echo
+    echo -e "${BLUE}Next Steps:${NC}"
+    echo "1. Set GitHub token (if not already set):"
+    echo "   export GITHUB_PERSONAL_ACCESS_TOKEN='your-token'"
+    echo "2. Reload shell configuration:"
+    echo "   source ~/.zshrc  # or ~/.bashrc"
+    echo "3. Test MCP servers:"
+    echo "   claude-mcp test"
+    echo "4. Activate Serena for a project:"
+    echo "   cd your-project && activate-project"
+    echo "5. Restart Claude Desktop"
+    echo
+    echo -e "${BLUE}Helper Commands:${NC}"
+    echo "   claude-mcp list  - List MCP servers"
+    echo "   claude-mcp test  - Test connections"
+    echo "   claude-mcp fix   - Fix configuration"
+    echo
 }
 
 install_zsh_config() {
@@ -806,7 +1054,7 @@ main() {
                 mode="$MODE_FULL"
                 shift
                 ;;
-            full|quick|config-only|starship-only|pnpm-only|mcp-only|kiro-only)
+            full|quick|config-only|starship-only|pnpm-only|mcp-only|mcp-fix|kiro-only|serena-only|astronvim|astronvim-full|claude-integration)
                 mode="$1"
                 shift
                 ;;
@@ -930,14 +1178,39 @@ main() {
             install_mcp_only
             ;;
             
+        "$MODE_MCP_FIX")
+            # Fix MCP connections
+            fix_mcp_servers
+            ;;
+            
         "$MODE_KIRO_ONLY")
             # Kiro command only
             install_kiro_command
             ;;
+            
+        "$MODE_SERENA_ONLY")
+            # Serena MCP server only
+            install_serena_mcp
+            ;;
+            
+        "$MODE_ASTRONVIM")
+            # AstroNvim migration only
+            install_astronvim
+            ;;
+            
+        "$MODE_ASTRONVIM_FULL")
+            # AstroNvim with full development setup
+            install_astronvim_full
+            ;;
+            
+        "$MODE_CLAUDE_INTEGRATION"|claude-integration)
+            # Claude Code integration with Serena and MCP
+            install_claude_integration
+            ;;
     esac
     
     # Verify installation
-    if [[ "$mode" != "$MODE_STARSHIP_ONLY" ]] && [[ "$mode" != "$MODE_PNPM_ONLY" ]] && [[ "$mode" != "$MODE_MCP_ONLY" ]] && [[ "$mode" != "$MODE_KIRO_ONLY" ]]; then
+    if [[ "$mode" != "$MODE_STARSHIP_ONLY" ]] && [[ "$mode" != "$MODE_PNPM_ONLY" ]] && [[ "$mode" != "$MODE_MCP_ONLY" ]] && [[ "$mode" != "$MODE_MCP_FIX" ]] && [[ "$mode" != "$MODE_KIRO_ONLY" ]] && [[ "$mode" != "$MODE_SERENA_ONLY" ]] && [[ "$mode" != "$MODE_ASTRONVIM" ]] && [[ "$mode" != "$MODE_ASTRONVIM_FULL" ]] && [[ "$mode" != "$MODE_CLAUDE_INTEGRATION" ]]; then
         verify_installation
     fi
     

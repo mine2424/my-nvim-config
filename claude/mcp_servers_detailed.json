@@ -18,18 +18,20 @@
         "Release management"
       ]
     },
-    "context7": {
+    "filesystem": {
       "command": "npx",
       "args": [
         "-y",
-        "@context7/mcp-server"
+        "@modelcontextprotocol/server-filesystem",
+        "/Users/mine/development"
       ],
-      "description": "Context7 MCP server for enhanced context management",
+      "description": "Official MCP filesystem server for secure file operations",
       "capabilities": [
-        "Context preservation",
-        "Memory management",
-        "Session history",
-        "Context switching"
+        "File reading and writing",
+        "Directory listing", 
+        "File search",
+        "Secure file operations",
+        "Configurable access controls"
       ]
     },
     "playwright": {
