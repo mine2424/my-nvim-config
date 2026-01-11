@@ -240,13 +240,14 @@ sync_terminal() {
     
     local dotfiles_root
     dotfiles_root="$(get_dotfiles_root)"
+    local wezterm_config="$(get_config_dir wezterm)/wezterm.lua"
     
     if [[ "$DIRECTION" == "push" ]]; then
         # dotfiles -> local
-        sync_file "$dotfiles_root/wezterm/.config/wezterm/wezterm.lua" "$HOME/.wezterm.lua" "WezTerm設定"
+        sync_file "$dotfiles_root/wezterm/.config/wezterm/wezterm.lua" "$wezterm_config" "WezTerm設定"
     else
         # local -> dotfiles
-        sync_file "$HOME/.wezterm.lua" "$dotfiles_root/wezterm/.config/wezterm/wezterm.lua" "WezTerm設定"
+        sync_file "$wezterm_config" "$dotfiles_root/wezterm/.config/wezterm/wezterm.lua" "WezTerm設定"
     fi
 }
 
