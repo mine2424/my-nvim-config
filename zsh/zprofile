@@ -1,0 +1,120 @@
+#!/usr/bin/env zsh
+# zprofile - ログインシェル用の設定
+# PATH設定などはここで行う
+
+# ========================================
+# PATH Configuration
+# ========================================
+
+# Helper function to add to PATH if directory exists
+path_prepend() {
+    [[ -d "$1" ]] && path=("$1" $path)
+}
+
+path_append() {
+    [[ -d "$1" ]] && path+="$1"
+}
+
+# Initialize path array
+typeset -U path  # Remove duplicates
+
+# ========================================
+# System Paths
+# ========================================
+
+# Local binaries
+path_prepend "$HOME/.local/bin"
+
+# ========================================
+# Homebrew
+# ========================================
+
+if [[ "$(uname -s)" == "Darwin" ]]; then
+    # macOS - Apple Silicon
+    if [[ -f "/opt/homebrew/bin/brew" ]]; then
+        eval "$(/opt/homebrew/bin/brew shellenv)"
+    # macOS - Intel
+    elif [[ -f "/usr/local/bin/brew" ]]; then
+        eval "$(/usr/local/bin/brew shellenv)"
+    fi
+elif [[ "$(uname -s)" == "Linux" ]]; then
+    # Linux - Linuxbrew
+    if [[ -f "/home/linuxbrew/.linuxbrew/bin/brew" ]]; then
+        eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
+    fi
+fi
+
+# ========================================
+# Development Tools
+# ========================================
+
+# Go
+if [[ -n "$GOPATH" ]]; then
+    path_prepend "$GOPATH/bin"
+fi
+
+# Rust
+if [[ -n "$CARGO_HOME" ]]; then
+    path_prepend "$CARGO_HOME/bin"
+elif [[ -d "$HOME/.cargo/bin" ]]; then
+    path_prepend "$HOME/.cargo/bin"
+fi
+
+# Node.js (global npm packages)
+if command -v npm &> /dev/null; then
+    path_append "$(npm config get prefix)/bin"
+fi
+
+# Python (user site-packages)
+if command -v python3 &> /dev/null; then
+    path_append "$(python3 -m site --user-base)/bin"
+fi
+
+# Ruby (gem user install)
+if command -v ruby &> /dev/null && command -v gem &> /dev/null; then
+    path_append "$(ruby -r rubygems -e 'puts Gem.user_dir')/bin"
+fi
+
+# ========================================
+# Android SDK
+# ========================================
+
+if [[ -n "$ANDROID_HOME" ]]; then
+    path_append "$ANDROID_HOME/emulator"
+    path_append "$ANDROID_HOME/tools"
+    path_append "$ANDROID_HOME/tools/bin"
+    path_append "$ANDROID_HOME/platform-tools"
+fi
+
+# ========================================
+# Flutter
+# ========================================
+
+if [[ -d "$HOME/development/flutter" ]]; then
+    path_prepend "$HOME/development/flutter/bin"
+fi
+
+# Pub cache
+if [[ -d "$HOME/.pub-cache/bin" ]]; then
+    path_append "$HOME/.pub-cache/bin"
+fi
+
+# ========================================
+# Export PATH
+# ========================================
+
+export PATH
+
+# ========================================
+# macOS Specific Settings
+# ========================================
+
+if [[ "$(uname -s)" == "Darwin" ]]; then
+    # GPG
+    export GPG_TTY=$(tty)
+    
+    # SSH Agent
+    if [[ -z "$SSH_AUTH_SOCK" ]]; then
+        eval "$(ssh-agent -s)" > /dev/null
+    fi
+fi

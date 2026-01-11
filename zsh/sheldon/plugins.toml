@@ -1,25 +1,29 @@
-# Sheldon plugins configuration
-# Based on wasabeef/dotfiles
+# ========================================
+# Sheldon Plugin Configuration
+# ========================================
+# Plugin manager for Zsh
+# https://sheldon.cli.rs/
 
 shell = "zsh"
 
-
-[plugins]
+# ========================================
+# Core Plugins
+# ========================================
 
 # Deferred loading for faster startup
 [plugins.zsh-defer]
 github = "romkatv/zsh-defer"
 
-# Homebrew completions
-[plugins.brew]
-github = "wintermi/zsh-brew"
+# ========================================
+# Completion Plugins
+# ========================================
 
-# Directory environment management
-[plugins.direnv]
-github = "ohmyzsh/ohmyzsh"
-dir = "plugins/direnv"
+# Additional completions
+[plugins.zsh-completions]
+github = "zsh-users/zsh-completions"
+apply = ["fpath"]
 
-# FZF - Fuzzy finder
+# FZF integration
 [plugins.fzf]
 github = "junegunn/fzf"
 use = ["shell/completion.zsh", "shell/key-bindings.zsh"]
@@ -28,117 +32,188 @@ use = ["shell/completion.zsh", "shell/key-bindings.zsh"]
 [plugins.fzf-zsh-completions]
 github = "chitoku-k/fzf-zsh-completions"
 
+# Git completions
+[plugins.git-completions]
+github = "ohmyzsh/ohmyzsh"
+dir = "plugins/git"
+use = ["git.plugin.zsh"]
+
+# Docker completions
+[plugins.docker-completions]
+github = "ohmyzsh/ohmyzsh"
+dir = "plugins/docker"
+use = ["docker.plugin.zsh"]
+
+# Kubectl completions
+[plugins.kubectl-completions]
+github = "ohmyzsh/ohmyzsh"
+dir = "plugins/kubectl"
+use = ["kubectl.plugin.zsh"]
+
+# ========================================
+# Productivity Plugins
+# ========================================
+
 # Auto suggestions
 [plugins.zsh-autosuggestions]
 github = "zsh-users/zsh-autosuggestions"
 use = ["zsh-autosuggestions.zsh"]
 
-# Syntax highlighting (load last)
-[plugins.zsh-syntax-highlighting]
-github = "zsh-users/zsh-syntax-highlighting"
-use = ["zsh-syntax-highlighting.zsh"]
-apply = ["source"]
+# History substring search
+[plugins.zsh-history-substring-search]
+github = "zsh-users/zsh-history-substring-search"
+use = ["zsh-history-substring-search.zsh"]
 
-# Additional completions
-[plugins.zsh-completions]
-github = "zsh-users/zsh-completions"
+# Fast syntax highlighting (must be loaded last)
+[plugins.fast-syntax-highlighting]
+github = "zdharma-continuum/fast-syntax-highlighting"
 
-# NPM scripts completion
-[plugins.zsh-npm-scripts-autocomplete]
-github = "grigorii-zander/zsh-npm-scripts-autocomplete"
+# ========================================
+# Directory Navigation
+# ========================================
 
-# Environment setup inline plugins
-[plugins.env-setup]
-inline = '''
-# Set up environment paths and tools
+# Directory environment management
+[plugins.direnv]
+github = "ohmyzsh/ohmyzsh"
+dir = "plugins/direnv"
 
-# mise (formerly rtx) - Runtime version manager
-if command -v mise &> /dev/null; then
-  eval "$(mise activate zsh)"
-  eval "$(mise completion zsh)"
-fi
+# ========================================
+# Development Tools
+# ========================================
 
-# Go environment
-if command -v go &> /dev/null; then
-  export GOPATH="$HOME/go"
-  export PATH="$GOPATH/bin:$PATH"
-fi
+# Homebrew
+[plugins.brew]
+github = "wintermi/zsh-brew"
 
-# Android SDK
-if [[ -d "$HOME/Library/Android/sdk" ]]; then
-  export ANDROID_HOME="$HOME/Library/Android/sdk"
-elif [[ -d "$HOME/Android/Sdk" ]]; then
-  export ANDROID_HOME="$HOME/Android/Sdk"
-fi
+# Node.js / NPM
+[plugins.npm]
+github = "ohmyzsh/ohmyzsh"
+dir = "plugins/npm"
 
-if [[ -n "$ANDROID_HOME" ]]; then
-  export PATH="$ANDROID_HOME/tools:$ANDROID_HOME/tools/bin:$ANDROID_HOME/platform-tools:$PATH"
-fi
-
-# Flutter
-if [[ -d "$HOME/development/flutter" ]]; then
-  export PATH="$HOME/development/flutter/bin:$PATH"
-  export PATH="$HOME/.pub-cache/bin:$PATH"
-fi
+# Python
+[plugins.python]
+github = "ohmyzsh/ohmyzsh"
+dir = "plugins/python"
 
 # Rust
-if [[ -f "$HOME/.cargo/env" ]]; then
-  source "$HOME/.cargo/env"
-fi
+[plugins.rust]
+github = "ohmyzsh/ohmyzsh"
+dir = "plugins/rust"
 
-# Ruby (rbenv)
-if command -v rbenv &> /dev/null; then
-  eval "$(rbenv init - zsh)"
-fi
+# ========================================
+# Custom Inline Plugins
+# ========================================
 
-# Python (pyenv)
-if command -v pyenv &> /dev/null; then
-  export PYENV_ROOT="$HOME/.pyenv"
-  export PATH="$PYENV_ROOT/bin:$PATH"
-  eval "$(pyenv init -)"
-fi
-
-# Node.js (fnm - Fast Node Manager)
-if command -v fnm &> /dev/null; then
-  eval "$(fnm env --use-on-cd)"
-fi
+# Auto suggestions configuration
+[plugins.autosuggestions-config]
+inline = '''
+# Auto suggestions styling
+ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE='fg=240'
+ZSH_AUTOSUGGEST_STRATEGY=(history completion)
+ZSH_AUTOSUGGEST_BUFFER_MAX_SIZE=20
+ZSH_AUTOSUGGEST_USE_ASYNC=1
 '''
 
-# Completion settings
-[plugins.completion-settings]
+# History substring search configuration
+[plugins.history-search-config]
 inline = '''
-# Completion settings
-zstyle ':completion:*' menu select
-zstyle ':completion:*' matcher-list 'm:{a-zA-Z}={A-Za-z}'
-zstyle ':completion:*' list-colors "${(s.:.)LS_COLORS}"
-zstyle ':completion:*:descriptions' format '%U%B%d%b%u'
-zstyle ':completion:*:warnings' format '%BSorry, no matches for: %d%b'
-'''
-
-# Custom aliases and functions
-[plugins.custom-config]
-inline = '''
-# Custom configuration loaded after all plugins
-
-# Set ZSH options
-setopt COMPLETE_IN_WORD
-setopt ALWAYS_TO_END
-setopt PATH_DIRS
-setopt AUTO_MENU
-setopt AUTO_LIST
-setopt AUTO_PARAM_SLASH
-setopt EXTENDED_GLOB
-setopt UNSET
-setopt NO_BG_NICE
-setopt NO_HUP
-setopt NO_LIST_BEEP
-setopt LOCAL_OPTIONS
-setopt LOCAL_TRAPS
-setopt PROMPT_SUBST
-
-# Key bindings
-bindkey -e  # Emacs key bindings
+# History substring search key bindings
 bindkey '^[[A' history-substring-search-up
 bindkey '^[[B' history-substring-search-down
-bindkey '^R' history-incremental-search-backward
+bindkey '^P' history-substring-search-up
+bindkey '^N' history-substring-search-down
+
+# History substring search styling
+HISTORY_SUBSTRING_SEARCH_HIGHLIGHT_FOUND='bg=green,fg=white,bold'
+HISTORY_SUBSTRING_SEARCH_HIGHLIGHT_NOT_FOUND='bg=red,fg=white,bold'
+HISTORY_SUBSTRING_SEARCH_FUZZY=1
+'''
+
+# Runtime version managers
+[plugins.version-managers]
+inline = '''
+# mise (formerly rtx) - Runtime version manager
+if command -v mise &> /dev/null; then
+    eval "$(mise activate zsh)"
+fi
+
+# fnm - Fast Node Manager
+if command -v fnm &> /dev/null; then
+    eval "$(fnm env --use-on-cd)"
+fi
+
+# rbenv - Ruby version manager
+if command -v rbenv &> /dev/null; then
+    eval "$(rbenv init - zsh)"
+fi
+
+# pyenv - Python version manager
+if command -v pyenv &> /dev/null; then
+    eval "$(pyenv init -)"
+fi
+'''
+
+# Additional tool integrations
+[plugins.tool-integrations]
+inline = '''
+# GitHub CLI
+if command -v gh &> /dev/null; then
+    eval "$(gh completion -s zsh)"
+fi
+
+# Terraform
+if command -v terraform &> /dev/null; then
+    complete -o nospace -C $(which terraform) terraform
+fi
+
+# AWS CLI
+if command -v aws &> /dev/null && [[ -f /usr/local/bin/aws_zsh_completer.sh ]]; then
+    source /usr/local/bin/aws_zsh_completer.sh
+fi
+'''
+
+# Custom key bindings
+[plugins.custom-keybindings]
+inline = '''
+# Edit command line in editor
+autoload -Uz edit-command-line
+zle -N edit-command-line
+bindkey '^X^E' edit-command-line
+
+# Undo/Redo
+bindkey '^Z' undo
+bindkey '^Y' redo
+
+# Word movement
+bindkey '^[[1;5C' forward-word    # Ctrl+Right
+bindkey '^[[1;5D' backward-word   # Ctrl+Left
+
+# Delete word
+bindkey '^H' backward-kill-word   # Ctrl+Backspace
+bindkey '^[[3;5~' kill-word       # Ctrl+Delete
+'''
+
+# Performance optimizations
+[plugins.performance]
+inline = '''
+# Disable unnecessary features for better performance
+DISABLE_MAGIC_FUNCTIONS=true
+DISABLE_AUTO_UPDATE=true
+DISABLE_UPDATE_PROMPT=true
+
+# Lazy load heavy commands
+lazy_load() {
+    local cmd="$1"
+    shift
+    local load_cmd="$*"
+    
+    eval "$cmd() {
+        unfunction $cmd
+        $load_cmd
+        $cmd \"\$@\"
+    }"
+}
+
+# Example: lazy load nvm (if needed)
+# lazy_load nvm 'source $HOME/.nvm/nvm.sh'
 '''

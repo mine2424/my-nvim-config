@@ -1,0 +1,117 @@
+#!/usr/bin/env zsh
+# zshenv - 環境変数の設定
+# すべてのシェル（ログイン、非ログイン、対話、非対話）で読み込まれる
+# PATH以外の環境変数はここで設定
+
+# ========================================
+# XDG Base Directory Specification
+# ========================================
+export XDG_CONFIG_HOME="${XDG_CONFIG_HOME:-$HOME/.config}"
+export XDG_DATA_HOME="${XDG_DATA_HOME:-$HOME/.local/share}"
+export XDG_CACHE_HOME="${XDG_CACHE_HOME:-$HOME/.cache}"
+export XDG_STATE_HOME="${XDG_STATE_HOME:-$HOME/.local/state}"
+
+# ========================================
+# Language and Locale
+# ========================================
+export LANG=en_US.UTF-8
+export LANGUAGE=${LANG}
+export LC_ALL=en_US.UTF-8
+export LC_CTYPE=en_US.UTF-8
+
+# ========================================
+# Editor Configuration
+# ========================================
+export EDITOR='nvim'
+export VISUAL='nvim'
+export PAGER='less'
+
+# ========================================
+# Less Configuration
+# ========================================
+export LESS='-R -F -X -i -M -w -z-4'
+export LESSCHARSET='utf-8'
+
+# ========================================
+# History Configuration
+# ========================================
+export HISTFILE="${XDG_STATE_HOME}/zsh/history"
+export HISTSIZE=50000
+export SAVEHIST=50000
+
+# ========================================
+# Tool-specific Configuration
+# ========================================
+
+# Ripgrep
+export RIPGREP_CONFIG_PATH="${XDG_CONFIG_HOME}/ripgrep/config"
+
+# FZF
+export FZF_DEFAULT_OPTS='
+  --height 40%
+  --layout=reverse
+  --border
+  --inline-info
+  --color=fg:#c0caf5,bg:#1a1b26,hl:#bb9af7
+  --color=fg+:#c0caf5,bg+:#292e42,hl+:#7dcfff
+  --color=info:#7aa2f7,prompt:#7dcfff,pointer:#7dcfff
+  --color=marker:#9ece6a,spinner:#9ece6a,header:#9ece6a
+'
+
+# Bat (cat replacement)
+export BAT_THEME='TwoDark'
+export BAT_STYLE='numbers,changes,header'
+
+# ========================================
+# Development Tools
+# ========================================
+
+# Go
+export GOPATH="${HOME}/go"
+
+# Rust
+export RUSTUP_HOME="${XDG_DATA_HOME}/rustup"
+export CARGO_HOME="${XDG_DATA_HOME}/cargo"
+
+# Node.js
+export NODE_REPL_HISTORY="${XDG_DATA_HOME}/node_repl_history"
+export NPM_CONFIG_USERCONFIG="${XDG_CONFIG_HOME}/npm/npmrc"
+
+# Python
+export PYTHONSTARTUP="${XDG_CONFIG_HOME}/python/pythonrc"
+export PYLINTHOME="${XDG_CACHE_HOME}/pylint"
+
+# Docker
+export DOCKER_CONFIG="${XDG_CONFIG_HOME}/docker"
+
+# Kubernetes
+export KUBECONFIG="${XDG_CONFIG_HOME}/kube/config"
+
+# ========================================
+# macOS Specific
+# ========================================
+if [[ "$(uname -s)" == "Darwin" ]]; then
+    # Homebrew
+    export HOMEBREW_NO_ANALYTICS=1
+    export HOMEBREW_NO_ENV_HINTS=1
+    
+    # Android SDK
+    if [[ -d "$HOME/Library/Android/sdk" ]]; then
+        export ANDROID_HOME="$HOME/Library/Android/sdk"
+    fi
+fi
+
+# ========================================
+# Linux Specific
+# ========================================
+if [[ "$(uname -s)" == "Linux" ]]; then
+    # Android SDK
+    if [[ -d "$HOME/Android/Sdk" ]]; then
+        export ANDROID_HOME="$HOME/Android/Sdk"
+    fi
+fi
+
+# ========================================
+# Ensure directories exist
+# ========================================
+[[ ! -d "${HISTFILE:h}" ]] && mkdir -p "${HISTFILE:h}"

@@ -1,25 +1,20 @@
 #!/usr/bin/env zsh
 # ========================================
 # Zsh Configuration
-# Based on wasabeef/dotfiles
+# 対話型シェル用の設定
 # ========================================
 
-# Language and Locale
-export LANG=en_US.UTF-8
-export LANGUAGE=${LANG}
-export LC_ALL=en_US.UTF-8
-export LC_CTYPE=en_US.UTF-8
-export LESS=-R
+# ========================================
+# Performance Profiling (Optional)
+# ========================================
+# Uncomment to enable profiling
+# zmodload zsh/zprof
 
-# History Configuration
-export HISTFILE="$HOME/.zsh_history"
-export HISTSIZE=10000
-export HISTFILESIZE=10000
-export SAVEHIST=10000
-export FUNCNEST=1000
+# ========================================
+# Zsh Options
+# ========================================
 
-# History Options
-setopt BANG_HIST              # Treat the '!' character specially during expansion
+# History
 setopt EXTENDED_HISTORY       # Write the history file in the ":start:elapsed;command" format
 setopt INC_APPEND_HISTORY     # Write to the history file immediately, not when the shell exits
 setopt SHARE_HISTORY          # Share history between all sessions
@@ -31,195 +26,219 @@ setopt HIST_IGNORE_SPACE      # Don't record an entry starting with a space
 setopt HIST_SAVE_NO_DUPS      # Don't write duplicate entries in the history file
 setopt HIST_REDUCE_BLANKS     # Remove superfluous blanks before recording entry
 setopt HIST_VERIFY            # Don't execute immediately upon history expansion
-setopt HIST_BEEP              # Beep when accessing nonexistent history
+
+# Directory Navigation
 setopt AUTO_CD                # Auto change directory when typing directory name
+setopt AUTO_PUSHD             # Push the old directory onto the stack on cd
+setopt PUSHD_IGNORE_DUPS      # Don't push multiple copies of the same directory
+setopt PUSHD_MINUS            # Exchange the meanings of '+' and '-'
+setopt PUSHD_SILENT           # Do not print the directory stack after pushd or popd
+setopt PUSHD_TO_HOME          # Push to home directory when no argument is given
 
-# OS-specific Configuration
-case $(uname | tr '[:upper:]' '[:lower:]') in
-  linux*)
-    # Linux-specific settings
-    if command -v /home/linuxbrew/.linuxbrew/bin/brew &> /dev/null; then
-      eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
-    fi
-    ;;
-  darwin*)
-    # macOS-specific settings
-    if command -v /opt/homebrew/bin/brew &> /dev/null; then
-      eval "$(/opt/homebrew/bin/brew shellenv)"
-    elif command -v /usr/local/bin/brew &> /dev/null; then
-      eval "$(/usr/local/bin/brew shellenv)"
-    fi
+# Completion
+setopt COMPLETE_IN_WORD       # Complete from both ends of a word
+setopt ALWAYS_TO_END          # Move cursor to the end of a completed word
+setopt PATH_DIRS              # Perform path search even on command names with slashes
+setopt AUTO_MENU              # Show completion menu on a successive tab press
+setopt AUTO_LIST              # Automatically list choices on ambiguous completion
+setopt AUTO_PARAM_SLASH       # If completed parameter is a directory, add a trailing slash
+setopt MENU_COMPLETE          # Insert first match immediately
 
-    # システム設定は必要なときのみ実行
-    # defaults write com.apple.screencapture location ~/Pictures/Screenshots
-    # defaults write com.apple.desktopservices DSDontWriteNetworkStores -bool true
-    ;;
-esac
+# Globbing
+setopt EXTENDED_GLOB          # Use extended globbing syntax
+setopt GLOB_DOTS              # Include dotfiles in globbing
 
-# Editor Configuration
-export EDITOR='nvim'
-export VISUAL='nvim'
-export PAGER='less'
+# Other
+setopt INTERACTIVE_COMMENTS   # Allow comments in interactive shell
+setopt NO_BEEP                # Don't beep on error
+setopt MULTIOS                # Perform implicit tees or cats when multiple redirections are attempted
 
 # ========================================
-# Completions (Initialize early for plugins)
+# Completion System
 # ========================================
 
-# Enable completions (高速化のためにチェックを追加)
+# Initialize completion system
 autoload -Uz compinit
-if [[ -n ${ZDOTDIR}/.zcompdump(#qNmh+24) ]]; then
-  compinit
+
+# Speed up compinit by checking cache once per day
+if [[ -n ${ZDOTDIR:-$HOME}/.zcompdump(#qNmh+24) ]]; then
+    compinit
 else
-  compinit -C
+    compinit -C
 fi
 
-# Case-insensitive completion
-zstyle ':completion:*' matcher-list 'm:{a-zA-Z}={A-Za-z}'
-
-# Colorful completions
+# Completion styling
+zstyle ':completion:*' menu select
+zstyle ':completion:*' matcher-list 'm:{a-zA-Z}={A-Za-z}' 'r:|[._-]=* r:|=*' 'l:|=* r:|=*'
 zstyle ':completion:*' list-colors "${(s.:.)LS_COLORS}"
+zstyle ':completion:*:descriptions' format '%F{yellow}-- %d --%f'
+zstyle ':completion:*:warnings' format '%F{red}-- no matches found --%f'
+zstyle ':completion:*:messages' format '%F{purple}-- %d --%f'
+zstyle ':completion:*:corrections' format '%F{green}-- %d (errors: %e) --%f'
+zstyle ':completion:*' group-name ''
+zstyle ':completion:*' verbose yes
+
+# Completion caching
+zstyle ':completion:*' use-cache on
+zstyle ':completion:*' cache-path "${XDG_CACHE_HOME:-$HOME/.cache}/zsh/zcompcache"
+
+# Process completion
+zstyle ':completion:*:*:*:*:processes' command 'ps -u $USER -o pid,user,comm -w'
+zstyle ':completion:*:*:kill:*:processes' list-colors '=(#b) #([0-9]#) ([0-9a-z-]#)*=01;34=0=01'
 
 # ========================================
 # Plugin Management with Sheldon
 # ========================================
 
-# Check if sheldon is installed
 if command -v sheldon &> /dev/null; then
-  # Create sheldon config directory if it doesn't exist
-  mkdir -p "$HOME/.config/sheldon"
-
-  # Source sheldon plugins (quiet mode)
-  export SHELDON_LOAD_QUIET=1
-  eval "$(sheldon --quiet source)"
+    # Ensure config directory exists
+    [[ ! -d "${XDG_CONFIG_HOME:-$HOME/.config}/sheldon" ]] && \
+        mkdir -p "${XDG_CONFIG_HOME:-$HOME/.config}/sheldon"
+    
+    # Load plugins
+    eval "$(sheldon source)"
 fi
 
 # ========================================
-# Path Configuration
+# Key Bindings
 # ========================================
 
-# Add local bin to PATH
-export PATH="$HOME/.local/bin:$PATH"
+# Use Emacs key bindings
+bindkey -e
 
-# Flutter
-if [ -d "$HOME/development/flutter" ]; then
-  export PATH="$HOME/development/flutter/bin:$PATH"
-fi
+# History search
+autoload -Uz up-line-or-beginning-search down-line-or-beginning-search
+zle -N up-line-or-beginning-search
+zle -N down-line-or-beginning-search
 
-# Pub Cache
-export PATH="$PATH":"$HOME/.pub-cache/bin"
+bindkey '^[[A' up-line-or-beginning-search      # Up arrow
+bindkey '^[[B' down-line-or-beginning-search    # Down arrow
+bindkey '^P' up-line-or-beginning-search        # Ctrl+P
+bindkey '^N' down-line-or-beginning-search      # Ctrl+N
 
-# Android SDK
-if [ -d "$HOME/Library/Android/sdk" ]; then
-  export ANDROID_HOME="$HOME/Library/Android/sdk"
-  export PATH="$ANDROID_HOME/tools:$ANDROID_HOME/tools/bin:$ANDROID_HOME/platform-tools:$PATH"
-elif [ -d "$HOME/Android/Sdk" ]; then
-  export ANDROID_HOME="$HOME/Android/Sdk"
-  export PATH="$ANDROID_HOME/tools:$ANDROID_HOME/tools/bin:$ANDROID_HOME/platform-tools:$PATH"
-fi
-
-# Go
-if command -v go &> /dev/null; then
-  export GOPATH="$HOME/go"
-  export PATH="$GOPATH/bin:$PATH"
-fi
-
-# Rust
-if [ -f "$HOME/.cargo/env" ]; then
-  source "$HOME/.cargo/env"
-fi
-
-# Node Version Manager (mise/rtx)
-if command -v mise &> /dev/null; then
-  eval "$(mise activate zsh)"
-elif command -v rtx &> /dev/null; then
-  eval "$(rtx activate zsh)"
-fi
+# Other useful bindings
+bindkey '^R' history-incremental-search-backward  # Ctrl+R
+bindkey '^S' history-incremental-search-forward   # Ctrl+S
+bindkey '^A' beginning-of-line                    # Ctrl+A
+bindkey '^E' end-of-line                          # Ctrl+E
+bindkey '^K' kill-line                            # Ctrl+K
+bindkey '^U' backward-kill-line                   # Ctrl+U
+bindkey '^W' backward-kill-word                   # Ctrl+W
+bindkey '^Y' yank                                 # Ctrl+Y
 
 # ========================================
 # Aliases
 # ========================================
 
-# Editor Aliases
+# Editor
 alias vi='nvim'
 alias vim='nvim'
-alias neovim='nvim'
+alias v='nvim'
 
 # Directory Navigation
 alias ..='cd ..'
 alias ...='cd ../..'
 alias ....='cd ../../..'
 alias .....='cd ../../../..'
+alias -- -='cd -'  # Go to previous directory
 
 # Modern Command Replacements
 if command -v eza &> /dev/null; then
-  alias ls='eza --icons --git'
-  alias ll='eza -l --icons --git'
-  alias la='eza -la --icons --git'
-  alias lt='eza --tree --level=2 --icons --git'
-  alias lta='eza --tree --level=2 -la --icons --git'
+    alias ls='eza --icons --git'
+    alias ll='eza -l --icons --git --header'
+    alias la='eza -la --icons --git --header'
+    alias lt='eza --tree --level=2 --icons --git'
+    alias lta='eza --tree --level=2 -la --icons --git'
+    alias tree='eza --tree --icons --git'
 else
-  alias ll='ls -l'
-  alias la='ls -la'
+    alias ll='ls -lh'
+    alias la='ls -lAh'
 fi
 
 if command -v bat &> /dev/null; then
-  alias cat='bat'
+    alias cat='bat --paging=never'
+    alias less='bat'
 fi
 
 if command -v fd &> /dev/null; then
-  alias find='fd'
+    alias find='fd'
 fi
 
 if command -v rg &> /dev/null; then
-  alias grep='rg'
+    alias grep='rg'
 fi
 
 if command -v procs &> /dev/null; then
-  alias ps='procs'
+    alias ps='procs'
 fi
 
 if command -v dust &> /dev/null; then
-  alias du='dust'
+    alias du='dust'
 fi
 
 if command -v duf &> /dev/null; then
-  alias df='duf'
+    alias df='duf'
 fi
 
 if command -v btop &> /dev/null; then
-  alias top='btop'
+    alias top='btop'
 elif command -v htop &> /dev/null; then
-  alias top='htop'
+    alias top='htop'
 fi
 
 # Git Aliases
 alias g='git'
-alias gi='git'
 alias gs='git status'
+alias gst='git status'
 alias ga='git add'
+alias gaa='git add --all'
 alias gc='git commit'
+alias gcm='git commit -m'
+alias gca='git commit --amend'
 alias gp='git push'
-alias gl='git log'
+alias gpl='git pull'
+alias gl='git log --oneline --graph --decorate'
+alias gla='git log --oneline --graph --decorate --all'
 alias gd='git diff'
+alias gds='git diff --staged'
 alias gb='git branch'
+alias gba='git branch -a'
 alias gco='git checkout'
 alias gcb='git checkout -b'
-alias gpl='git pull'
 alias gm='git merge'
 alias gr='git rebase'
+alias gri='git rebase -i'
+alias gf='git fetch'
+alias gfa='git fetch --all'
+alias gst='git stash'
+alias gstp='git stash pop'
+alias gstl='git stash list'
 
 # Lazygit
 if command -v lazygit &> /dev/null; then
-  alias lg='lazygit'
+    alias lg='lazygit'
 fi
 
-# GitHub Copilot CLI
-if command -v github-copilot-cli &> /dev/null; then
-  alias '?'='github-copilot-cli what-the-shell'
-  alias '??'='github-copilot-cli explain'
-  alias 'git?'='github-copilot-cli git-assist'
-  alias 'gh?'='github-copilot-cli gh-assist'
-fi
+# Docker
+alias dk='docker'
+alias dkc='docker compose'
+alias dkps='docker ps'
+alias dkpsa='docker ps -a'
+alias dki='docker images'
+alias dkrm='docker rm'
+alias dkrmi='docker rmi'
+alias dkl='docker logs'
+alias dklf='docker logs -f'
+
+# Kubernetes
+alias k='kubectl'
+alias kgp='kubectl get pods'
+alias kgs='kubectl get services'
+alias kgd='kubectl get deployments'
+alias kl='kubectl logs'
+alias klf='kubectl logs -f'
+alias kd='kubectl describe'
+alias kdel='kubectl delete'
 
 # Flutter/Dart
 alias fl='flutter'
@@ -231,46 +250,30 @@ alias flpg='flutter pub get'
 alias flpu='flutter pub upgrade'
 alias fld='flutter doctor'
 alias fldev='flutter devices'
-alias flem='flutter emulators'
-alias jjjfr='flutter run --flavor=dev --dart-define-from-file=define/flavor/dev/common.json --dart-define-from-file=define/flavor/dev/tracking.json'
 
 # Melos (monorepo management)
 if command -v melos &> /dev/null; then
-  alias ml='melos'
-  alias mlb='melos bootstrap'
-  alias mlc='melos clean'
-  alias mlr='melos run'
-  alias mlt='melos test'
+    alias ml='melos'
+    alias mlb='melos bootstrap'
+    alias mlc='melos clean'
+    alias mlr='melos run'
+    alias mlt='melos test'
 fi
-
-# Other Development Tools
-alias dk='docker'
-alias dkc='docker-compose'
-alias k='kubectl'
-alias tf='terraform'
-alias code='code .'
-
-# Utility Aliases
-alias reload='source ~/.zshrc'
-alias myip='curl -s https://api.ipify.org'
-alias weather='curl wttr.in'
-
-# Mise
-alias mrucoco=' mise uninstall ruby --all && mise uninstall cocoapods && mise install ruby && mise install cocoapods'
 
 # Claude
 alias cl='claude'
 alias rcl='claude --resume'
-alias yolo='claude --dangerously-skip-permissions'
-alias ryolo='claude --dangerously-skip-permissions --resume'
-alias cl-cost='npx ccusage@latest'
 
-# Claude Usage Monitor
-alias cm='claude-monitor'
-alias cmp='claude-monitor --plan pro'
-alias cmx='claude-monitor --plan max20'
-alias cm5='claude-monitor --plan max5'
-alias cmc='claude-monitor --plan custom'
+# Utility
+alias reload='exec zsh'
+alias myip='curl -s https://api.ipify.org && echo'
+alias weather='curl wttr.in'
+alias ports='netstat -tulanp'
+
+# Safety
+alias rm='rm -i'
+alias cp='cp -i'
+alias mv='mv -i'
 
 # ========================================
 # Functions
@@ -278,69 +281,111 @@ alias cmc='claude-monitor --plan custom'
 
 # Create directory and cd into it
 mkcd() {
-  mkdir -p "$1" && cd "$1"
+    mkdir -p "$1" && cd "$1"
 }
 
 # Extract various archive formats
 extract() {
-  if [ -f "$1" ]; then
+    if [[ ! -f "$1" ]]; then
+        echo "Error: '$1' is not a valid file"
+        return 1
+    fi
+    
     case "$1" in
-      *.tar.bz2)   tar xjf "$1"     ;;
-      *.tar.gz)    tar xzf "$1"     ;;
-      *.bz2)       bunzip2 "$1"     ;;
-      *.rar)       unrar e "$1"     ;;
-      *.gz)        gunzip "$1"      ;;
-      *.tar)       tar xf "$1"      ;;
-      *.tbz2)      tar xjf "$1"     ;;
-      *.tgz)       tar xzf "$1"     ;;
-      *.zip)       unzip "$1"       ;;
-      *.Z)         uncompress "$1"  ;;
-      *.7z)        7z x "$1"        ;;
-      *)           echo "'$1' cannot be extracted via extract()" ;;
+        *.tar.bz2)   tar xjf "$1"     ;;
+        *.tar.gz)    tar xzf "$1"     ;;
+        *.tar.xz)    tar xJf "$1"     ;;
+        *.bz2)       bunzip2 "$1"     ;;
+        *.rar)       unrar x "$1"     ;;
+        *.gz)        gunzip "$1"      ;;
+        *.tar)       tar xf "$1"      ;;
+        *.tbz2)      tar xjf "$1"     ;;
+        *.tgz)       tar xzf "$1"     ;;
+        *.zip)       unzip "$1"       ;;
+        *.Z)         uncompress "$1"  ;;
+        *.7z)        7z x "$1"        ;;
+        *)
+            echo "Error: '$1' cannot be extracted via extract()"
+            return 1
+            ;;
     esac
-  else
-    echo "'$1' is not a valid file"
-  fi
 }
 
 # Quick backup of file
 backup() {
-  cp "$1" "$1.backup-$(date +%Y%m%d-%H%M%S)"
+    if [[ ! -f "$1" ]]; then
+        echo "Error: '$1' is not a valid file"
+        return 1
+    fi
+    cp "$1" "$1.backup-$(date +%Y%m%d-%H%M%S)"
+    echo "Backed up: $1"
 }
 
-# ========================================
-# Additional Completions
-# ========================================
+# Find and cd to directory
+fcd() {
+    local dir
+    dir=$(fd --type d --hidden --follow --exclude .git | fzf --preview 'eza --tree --level=2 --icons {}' --preview-window=right:50%) && cd "$dir"
+}
 
-# Flutter completion
-if command -v flutter &> /dev/null; then
-  eval "$(flutter bash-completion)"
-fi
+# Find and open file in editor
+fv() {
+    local file
+    file=$(fd --type f --hidden --follow --exclude .git | fzf --preview 'bat --color=always --style=numbers {}' --preview-window=right:60%) && ${EDITOR:-nvim} "$file"
+}
+
+# Git checkout branch with fzf
+fgb() {
+    local branch
+    branch=$(git branch --all | grep -v HEAD | sed 's/^[* ]*//' | sed 's#remotes/origin/##' | sort -u | fzf --preview 'git log --oneline --graph --color=always {}' --preview-window=right:60%) && git checkout "$branch"
+}
+
+# Kill process with fzf
+fkill() {
+    local pid
+    pid=$(ps -ef | sed 1d | fzf -m --preview 'echo {}' --preview-window=down:3:wrap | awk '{print $2}')
+    if [[ -n "$pid" ]]; then
+        echo "$pid" | xargs kill -"${1:-9}"
+    fi
+}
 
 # ========================================
 # FZF Configuration
 # ========================================
 
 if command -v fzf &> /dev/null; then
-  # FZF default options
-  export FZF_DEFAULT_OPTS='--height 40% --layout=reverse --border'
-
-  # Use fd for FZF if available
-  if command -v fd &> /dev/null; then
-    export FZF_DEFAULT_COMMAND='fd --type f --hidden --follow --exclude .git'
-    export FZF_CTRL_T_COMMAND="$FZF_DEFAULT_COMMAND"
-  fi
-
-  # Load FZF key bindings and completion
-  [ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
+    # Use fd for FZF if available
+    if command -v fd &> /dev/null; then
+        export FZF_DEFAULT_COMMAND='fd --type f --hidden --follow --exclude .git'
+        export FZF_CTRL_T_COMMAND="$FZF_DEFAULT_COMMAND"
+        export FZF_ALT_C_COMMAND='fd --type d --hidden --follow --exclude .git'
+    fi
+    
+    # Load FZF key bindings if available
+    if [[ -f "${XDG_CONFIG_HOME:-$HOME/.config}/fzf/fzf.zsh" ]]; then
+        source "${XDG_CONFIG_HOME:-$HOME/.config}/fzf/fzf.zsh"
+    elif [[ -f ~/.fzf.zsh ]]; then
+        source ~/.fzf.zsh
+    fi
 fi
 
 # ========================================
-# Starship Prompt
+# Tool Integrations
 # ========================================
 
+# Direnv
+if command -v direnv &> /dev/null; then
+    eval "$(direnv hook zsh)"
+fi
+
+# Zoxide (better cd)
+if command -v zoxide &> /dev/null; then
+    eval "$(zoxide init zsh)"
+    alias cd='z'
+fi
+
+# Starship Prompt
 if command -v starship &> /dev/null; then
-  eval "$(starship init zsh)"
+    eval "$(starship init zsh)"
 fi
 
 # ========================================
@@ -348,4 +393,10 @@ fi
 # ========================================
 
 # Source local configuration if it exists
-[ -f ~/.zshrc.local ] && source ~/.zshrc.local
+[[ -f "${ZDOTDIR:-$HOME}/.zshrc.local" ]] && source "${ZDOTDIR:-$HOME}/.zshrc.local"
+
+# ========================================
+# Performance Profiling (Optional)
+# ========================================
+# Uncomment to show profiling results
+# zprof
