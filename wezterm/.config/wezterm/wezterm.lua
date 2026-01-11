@@ -215,7 +215,7 @@ end
 -- Tab Bar
 -- ========================================
 
-config.tab_bar_at_bottom = true
+config.tab_bar_at_bottom = false -- Gist style: タブバーを上に配置
 config.tab_max_width = 40
 config.use_fancy_tab_bar = true
 config.show_new_tab_button_in_tab_bar = false
