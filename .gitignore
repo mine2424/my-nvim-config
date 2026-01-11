@@ -1,55 +1,44 @@
-# Environment files
-.env.mcp
+# バックアップディレクトリ
+backups/*
+!backups/.gitignore
+
+# OS固有ファイル
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+Desktop.ini
+
+# エディタ一時ファイル
+*.swp
+*.swo
+*~
+.vscode/
+.idea/
+*.sublime-*
+
+# ログファイル
+*.log
+logs/
+
+# 一時ファイル
+tmp/
+temp/
+*.tmp
+
+# 環境固有の設定
 .env
 .env.local
 *.local
 
-# macOS
-.DS_Store
-*.swp
-*.swo
-*~
+# テストカバレッジ
+coverage/
+*.coverage
 
-# Neovim
-.netrwhist
-
-# Node
+# Node.js（ドキュメント生成などで使用する場合）
 node_modules/
-npm-debug.log
-yarn-error.log
-pnpm-debug.log
-
-# Logs
-*.log
-*.tmp
-
-# Backup files
-*.bak
-*.backup
-*_backup.*
-wezterm_*.lua
-
-# IDE
-.idea/
-.vscode/
-*.sublime-*
-
-# Python
-__pycache__/
-*.py[cod]
-*$py.class
-.venv/
-venv/
-
-# Lua
-luac.out
-
-# Build artifacts
-build/
-dist/
-out/
-
-# Cache
-.cache/
-.temp/
-.tmp/
+package-lock.json
+yarn.lock
