@@ -48,12 +48,6 @@ config.window_padding = {
 	top = "0.5cell",
 	bottom = "0cell",
 }
-config.window_frame = {
-	active_titlebar_bg = title_color_bg,
-	inactive_titlebar_bg = title_color_bg,
-	border_bottom_height = "0.5cell",
-	font_size = 10.0, -- Gist style
-}
 config.win32_system_backdrop = "Acrylic" -- Windows用
 
 -- ========================================
@@ -136,9 +130,6 @@ local title_color_fg = color_primary.fg
 
 -- Base colors for terminal
 config.colors = {
-	tab_bar = {
-		background = "#282c34",
-	},
 	foreground = "#b9c0cb",
 	background = "#282c34",
 	cursor_bg = "#ffcc00",
@@ -163,6 +154,14 @@ config.colors = {
 		inactive_tab_edge = title_color_bg,
 	},
 	split = title_color_bg:lighten(0.3):desaturate(0.5),
+}
+
+-- Window frame colors (must be set after color theme is initialized)
+config.window_frame = {
+	active_titlebar_bg = title_color_bg,
+	inactive_titlebar_bg = title_color_bg,
+	border_bottom_height = "0.5cell",
+	font_size = 10.0, -- Gist style
 }
 
 -- ========================================
@@ -191,11 +190,11 @@ config.font = wezterm.font_with_fallback({
 	{ family = "Courier New", weight = "Regular" },
 	{ family = "DejaVu Sans Mono", weight = "Regular" },
 	-- Moralerspace variants (インストール後にコメントを外してください)
-	-- { family = "Moralerspace Neon", weight = "Regular" },
-	-- { family = "Moralerspace Argon", weight = "Regular" },
-	-- { family = "Moralerspace Xenon", weight = "Regular" },
-	-- { family = "Moralerspace Radon", weight = "Regular" },
-	-- { family = "Moralerspace Krypton", weight = "Regular" },
+	{ family = "Moralerspace Neon", weight = "Regular" },
+	{ family = "Moralerspace Argon", weight = "Regular" },
+	{ family = "Moralerspace Xenon", weight = "Regular" },
+	{ family = "Moralerspace Radon", weight = "Regular" },
+	{ family = "Moralerspace Krypton", weight = "Regular" },
 })
 
 -- Font features (ligatures)
@@ -247,23 +246,6 @@ local function extract_repo_name_from_url(url)
 	end
 	local repo_name = url:match("([^/]+)%.git$") or url:match("([^/]+)$")
 	return repo_name
-end
-
--- Convert process name to icon
-local function process_to_icon(process_name)
-	local icons = {
-		nvim = "",
-		zsh = "",
-		bash = "󱆃",
-		sl = "󰔬",
-		lazygit = "",
-		tig = "",
-		wezterm = "",
-		mcfly = "",
-		emu = "🦤",
-		[""] = "🤖",
-	}
-	return icons[process_name] or process_name
 end
 
 -- Get Git repository name
@@ -319,33 +301,6 @@ local function get_git_repo_name(cwd_path)
 	end
 
 	return repo_name
-end
-
--- Check if process is running (CPU-based)
-local function check_process_running(pid)
-	local success, result = pcall(function()
-		local ps_success, ps_stdout = wezterm.run_child_process({
-			"/bin/ps",
-			"-p",
-			tostring(pid),
-			"-o",
-			"pcpu",
-		})
-
-		if not ps_success or not ps_stdout then
-			return false
-		end
-
-		local cpu = ps_stdout:match("([%d%.]+)")
-		local cpu_usage = tonumber(cpu) or 0
-		return cpu_usage >= 1.0
-	end)
-
-	if not success then
-		return false
-	end
-
-	return result
 end
 
 -- ========================================
