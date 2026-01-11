@@ -1,0 +1,18 @@
+auto-install-peers=true
+shamefully-hoist=false
+strict-peer-dependencies=false
+enable-pre-post-scripts=true
+prefer-workspace-packages=true
+link-workspace-packages=true
+save-workspace-protocol=rolling
+resolution-mode=highest
+registry=https://registry.npmjs.org/
+loglevel=error
+reporter=silent
+prefer-offline=true
+network-concurrency=16
+fetch-retries=2
+fetch-retry-mintimeout=1000
+fetch-retry-maxtimeout=5000
+# prefix should be set in global config (~/.config/npm/npmrc) not in project config
+# prefix=/Users/mine/.npm-global

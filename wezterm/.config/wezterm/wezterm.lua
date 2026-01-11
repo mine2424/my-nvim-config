@@ -34,11 +34,14 @@ config.prefer_egl = true
 -- Scrollback
 config.scrollback_lines = 10000
 
+-- Suppress font warnings (フォントが見つからない場合の警告を抑制)
+config.warn_about_missing_glyphs = false
+
 -- Window
 config.adjust_window_size_when_changing_font_size = false
 config.integrated_title_button_style = "Windows"
 config.window_decorations = "RESIZE"
-config.window_background_opacity = 0.8
+config.window_background_opacity = 0.85
 config.window_padding = {
 	left = "0.5cell",
 	right = "0.5cell",
@@ -46,10 +49,12 @@ config.window_padding = {
 	bottom = "0cell",
 }
 config.window_frame = {
-	active_titlebar_bg = "#0F2536",
-	inactive_titlebar_bg = "#0F2536",
+	active_titlebar_bg = title_color_bg,
+	inactive_titlebar_bg = title_color_bg,
 	border_bottom_height = "0.5cell",
+	font_size = 10.0, -- Gist style
 }
+config.win32_system_backdrop = "Acrylic" -- Windows用
 
 -- ========================================
 -- Cursor
@@ -62,9 +67,74 @@ config.cursor_blink_ease_out = "Constant"
 config.force_reverse_video_cursor = true
 
 -- ========================================
--- Colors
+-- Color Theme System (Gist style)
 -- ========================================
 
+local color_default_fg_light = wezterm.color.parse("#cacaca")
+local color_default_fg_dark = wezterm.color.parse("#303030")
+
+local COLOR = {
+	VERIDIAN = {
+		bg = wezterm.color.parse("#4D8060"),
+		fg = color_default_fg_light,
+	},
+	PAYNE = {
+		bg = wezterm.color.parse("#385F71"),
+		fg = color_default_fg_light,
+	},
+	INDIGO = {
+		bg = wezterm.color.parse("#7C77B9"),
+		fg = color_default_fg_light,
+	},
+	CAROLINA = {
+		bg = wezterm.color.parse("#8FBFE0"),
+		fg = color_default_fg_dark,
+	},
+	FLAME = {
+		bg = wezterm.color.parse("#D36135"),
+		fg = color_default_fg_dark,
+	},
+	JET = {
+		bg = wezterm.color.parse("#282B28"),
+		fg = color_default_fg_light,
+	},
+	TAUPE = {
+		bg = wezterm.color.parse("#785964"),
+		fg = color_default_fg_light,
+	},
+	ECRU = {
+		bg = wezterm.color.parse("#C6AE82"),
+		fg = color_default_fg_dark,
+	},
+	VIOLET = {
+		bg = wezterm.color.parse("#685F74"),
+		fg = color_default_fg_light,
+	},
+	VERDIGRIS = {
+		bg = wezterm.color.parse("#28AFB0"),
+		fg = color_default_fg_light,
+	},
+}
+
+-- Random color selection (Gist style)
+local coolors = {
+	COLOR.VERIDIAN,
+	COLOR.PAYNE,
+	COLOR.INDIGO,
+	COLOR.CAROLINA,
+	COLOR.FLAME,
+	COLOR.JET,
+	COLOR.TAUPE,
+	COLOR.ECRU,
+	COLOR.VIOLET,
+	COLOR.VERDIGRIS,
+}
+
+local color_primary = coolors[math.random(#coolors)]
+local title_color_bg = color_primary.bg
+local title_color_fg = color_primary.fg
+
+-- Base colors for terminal
 config.colors = {
 	tab_bar = {
 		background = "#282c34",
@@ -78,25 +148,54 @@ config.colors = {
 	selection_fg = "#272b33",
 	ansi = { "#41444d", "#fc2f52", "#25a45c", "#ff936a", "#3476ff", "#7a82da", "#4483aa", "#cdd4e0" },
 	brights = { "#8f9aae", "#ff6480", "#3fc56b", "#f9c859", "#10b1fe", "#ff78f8", "#5fb9bc", "#ffffff" },
+	-- Tab bar colors (Gist style)
+	tab_bar = {
+		active_tab = {
+			bg_color = title_color_bg:lighten(0.03),
+			fg_color = title_color_fg:lighten(0.8),
+			intensity = "Bold",
+		},
+		inactive_tab = {
+			bg_color = title_color_bg:lighten(0.01),
+			fg_color = title_color_fg,
+			intensity = "Half",
+		},
+		inactive_tab_edge = title_color_bg,
+	},
+	split = title_color_bg:lighten(0.3):desaturate(0.5),
 }
 
 -- ========================================
 -- Font Configuration
 -- ========================================
 
--- Moralerspace: プログラミング向けフォント
+-- Font Configuration
+-- Moralerspace: プログラミング向けフォント（インストールされている場合）
 -- https://github.com/yuru7/moralerspace
 -- Monaspace (欧文) + IBM Plex Sans JP (和文) の合成フォント
 -- Texture healing システム搭載、半角3:全角5の幅比率
+--
+-- 注意: Moralerspaceがインストールされていない場合、エラーを避けるために
+-- コメントアウトされています。インストール後、コメントを外してください。
+--
+-- Moralerspaceをインストールする場合:
+--   macOS: brew install --cask font-moralerspace
+--   詳細: docs/guides/font-installation.md
+-- フォント設定（エラーを避けるため、確実に存在するフォントを使用）
 config.font = wezterm.font_with_fallback({
-	{ family = "Moralerspace Neon", weight = "Regular" },
-	{ family = "Moralerspace Argon", weight = "Regular" },
-	{ family = "Moralerspace Xenon", weight = "Regular" },
-	{ family = "Moralerspace Radon", weight = "Regular" },
-	{ family = "Moralerspace Krypton", weight = "Regular" },
-	{ family = "JetBrains Mono", weight = "Regular" }, -- Fallback
-	{ family = "Monaco" },
-	{ family = "Menlo" },
+	-- macOS標準フォント（確実に存在）
+	"Menlo",
+	"Monaco",
+	-- 追加のフォールバック
+	{ family = "JetBrains Mono", weight = "Regular" },
+	{ family = "Courier New", weight = "Regular" },
+	{ family = "DejaVu Sans Mono", weight = "Regular" },
+	-- Moralerspace variants (インストール後にコメントを外してください)
+	-- { family = "Moralerspace Neon", weight = "Regular" },
+	-- { family = "Moralerspace Argon", weight = "Regular" },
+	-- { family = "Moralerspace Xenon", weight = "Regular" },
+	-- { family = "Moralerspace Radon", weight = "Regular" },
+	-- { family = "Moralerspace Krypton", weight = "Regular" },
 })
 
 -- Font features (ligatures)
@@ -121,6 +220,7 @@ config.tab_bar_at_bottom = true
 config.tab_max_width = 40
 config.use_fancy_tab_bar = true
 config.show_new_tab_button_in_tab_bar = false
+config.show_tab_index_in_tab_bar = false -- Gist style
 
 -- ========================================
 -- Helper Functions
@@ -249,164 +349,134 @@ local function check_process_running(pid)
 end
 
 -- ========================================
--- Tab Title Formatting
+-- Tab Title Formatting (Gist style)
 -- ========================================
 
+local TAB_EDGE_LEFT = wezterm.nerdfonts.ple_left_half_circle_thick
+local TAB_EDGE_RIGHT = wezterm.nerdfonts.ple_right_half_circle_thick
+
+local function tab_title(tab_info)
+	local title = tab_info.tab_title
+	if title and #title > 0 then
+		return title
+	end
+	return tab_info.active_pane.title:gsub("%.exe", "")
+end
+
 wezterm.on("format-tab-title", function(tab, tabs, panes, conf, hover, max_width)
-	local background = "#282c34"
-	local foreground = "#dcd7ba"
-	local edge_background = "#282c34"
+	local edge_background = title_color_bg
+	local background = title_color_bg:lighten(0.05)
+	local foreground = title_color_fg
 
-	if tab.is_active or hover then
-		background = "#015db2"
-		foreground = "#ffffff"
+	if tab.is_active then
+		background = background:lighten(0.1)
+		foreground = foreground:lighten(0.1)
+	elseif hover then
+		background = background:lighten(0.2)
+		foreground = foreground:lighten(0.2)
 	end
+
 	local edge_foreground = background
+	local title = tab_title(tab)
 
-	-- Determine tab title
-	local title = ""
-	if tab.tab_title and tab.tab_title ~= "" then
-		title = tab.tab_title
-	else
-		title = process_to_icon(tab.active_pane.title)
-	end
-
-	-- Claude status for current tab
-	local claude_emoji = ""
-	local proc_info = tab.active_pane and tab.active_pane:get_foreground_process_info()
-	if proc_info and proc_info.name then
-		local is_claude = proc_info.name:lower():match("claude")
-		if not is_claude and proc_info.argv then
-			for _, arg in ipairs(proc_info.argv) do
-				if arg:lower():match("claude") then
-					is_claude = true
-					break
-				end
-			end
-		end
-
-		if is_claude then
-			local ps_success, ps_result = pcall(function()
-				local success, stdout = wezterm.run_child_process({
-					"/bin/ps",
-					"-p",
-					tostring(proc_info.pid),
-					"-o",
-					"pcpu",
-				})
-				if success and stdout then
-					local cpu = stdout:match("([%d%.]+)")
-					local cpu_usage = tonumber(cpu) or 0
-					return cpu_usage >= 1.0 and " ⚡" or " 🤖"
-				else
-					return " 🤖"
-				end
-			end)
-			claude_emoji = ps_success and ps_result or " 🤖"
-		end
-	end
+	-- Ensure that the titles fit in the available space
+	title = wezterm.truncate_right(title, max_width - 2)
 
 	return {
 		{ Background = { Color = edge_background } },
 		{ Foreground = { Color = edge_foreground } },
-		{ Text = " " },
+		{ Text = TAB_EDGE_LEFT },
 		{ Background = { Color = background } },
 		{ Foreground = { Color = foreground } },
-		{ Attribute = { Intensity = tab.is_active and "Bold" or "Normal" } },
-		{ Text = " " .. title .. claude_emoji .. "  " },
+		{ Text = title },
 		{ Background = { Color = edge_background } },
 		{ Foreground = { Color = edge_foreground } },
-		{ Text = "" },
+		{ Text = TAB_EDGE_RIGHT },
 	}
 end)
 
 -- ========================================
--- Right Status (Claude monitoring)
+-- Right Status (Gist style: Battery + Workspace + Time)
 -- ========================================
 
 config.status_update_interval = 1000
 
+local color_off = title_color_bg:lighten(0.4)
+local color_on = color_off:lighten(0.4)
+
 wezterm.on("update-right-status", function(window, pane)
-	local elements = {}
-
-	-- Scan all tabs for Claude instances
-	if window then
-		local mux_window = window:mux_window()
-		if mux_window then
-			local claude_instances = {}
-
-			for tab_idx, tab in ipairs(mux_window:tabs()) do
-				for _, tab_pane in ipairs(tab:panes()) do
-					local proc_info = tab_pane:get_foreground_process_info()
-					if proc_info and proc_info.name then
-						local is_claude = proc_info.name:lower():match("claude")
-
-						if not is_claude and proc_info.argv then
-							for _, arg in ipairs(proc_info.argv) do
-								if arg:lower():match("claude") then
-									is_claude = true
-									break
-								end
-							end
-						end
-
-						if is_claude then
-							local is_running = check_process_running(proc_info.pid)
-							table.insert(claude_instances, {
-								tab_idx = tab_idx,
-								is_running = is_running,
-							})
-						end
-					end
-				end
-			end
-
-			-- Display Claude instances summary
-			if #claude_instances > 0 then
-				local running_count = 0
-				local idle_count = 0
-
-				for _, instance in ipairs(claude_instances) do
-					if instance.is_running then
-						running_count = running_count + 1
-					else
-						idle_count = idle_count + 1
-					end
-				end
-
-				table.insert(elements, { Foreground = { Color = "#FF6B6B" } })
-				if running_count > 0 then
-					table.insert(elements, { Text = "⚡" .. running_count })
-				end
-				if idle_count > 0 then
-					if running_count > 0 then
-						table.insert(elements, { Text = " " })
-					end
-					table.insert(elements, { Text = "🤖" .. idle_count })
-				end
-
-				-- Show tab numbers
-				table.insert(elements, { Foreground = { Color = "#a0a0a0" } })
-				table.insert(elements, { Text = " [" })
-				for i, instance in ipairs(claude_instances) do
-					if i > 1 then
-						table.insert(elements, { Text = "," })
-					end
-					table.insert(elements, { Text = tostring(instance.tab_idx) })
-				end
-				table.insert(elements, { Text = "]" })
-			end
-		end
+	-- Battery display (Gist style)
+	local bat = ""
+	local battery_info = wezterm.battery_info()
+	if battery_info and #battery_info > 0 then
+		local b = battery_info[1]
+		bat = wezterm.format({
+			{
+				Foreground = {
+					Color = b.state_of_charge > 0.2 and color_on or color_off,
+				},
+			},
+			{ Text = "▉" },
+			{
+				Foreground = {
+					Color = b.state_of_charge > 0.4 and color_on or color_off,
+				},
+			},
+			{ Text = "▉" },
+			{
+				Foreground = {
+					Color = b.state_of_charge > 0.6 and color_on or color_off,
+				},
+			},
+			{ Text = "▉" },
+			{
+				Foreground = {
+					Color = b.state_of_charge > 0.8 and color_on or color_off,
+				},
+			},
+			{ Text = "▉" },
+			{
+				Background = {
+					Color = b.state_of_charge > 0.98 and color_on or color_off,
+				},
+			},
+			{
+				Foreground = {
+					Color = b.state == "Charging" and color_on:lighten(0.3):complement()
+						or (b.state_of_charge < 0.2 and wezterm.GLOBAL.count % 2 == 0)
+							and color_on:lighten(0.1):complement()
+						or color_off:darken(0.1),
+				},
+			},
+			{ Text = " ⚡ " },
+		})
+	else
+		-- No battery (desktop PC)
+		bat = wezterm.format({
+			{ Text = "🖥" },
+		})
 	end
 
-	-- Time display
-	if #elements > 0 then
-		table.insert(elements, { Text = "  " })
-	end
-	table.insert(elements, { Foreground = { Color = "#9ece6a" } })
-	table.insert(elements, { Text = wezterm.strftime("%H:%M") })
+	-- Time display (Gist style)
+	local time = wezterm.strftime("%-l:%M %P")
 
-	window:set_right_status(wezterm.format(elements))
+	local bg1 = title_color_bg:lighten(0.1)
+	local bg2 = title_color_bg:lighten(0.2)
+
+	window:set_right_status(wezterm.format({
+		{ Background = { Color = title_color_bg } },
+		{ Foreground = { Color = bg1 } },
+		{ Text = " " },
+		{ Background = { Color = title_color_bg:lighten(0.1) } },
+		{ Foreground = { Color = title_color_fg } },
+		{ Text = " " .. window:active_workspace() .. " " },
+		{ Foreground = { Color = bg1 } },
+		{ Background = { Color = bg2 } },
+		{ Text = " " },
+		{ Foreground = { Color = title_color_bg:lighten(0.4) } },
+		{ Foreground = { Color = title_color_fg } },
+		{ Text = " " .. time .. " " .. bat },
+	}))
 end)
 
 -- ========================================

@@ -233,12 +233,13 @@ style = "bold blue"
 detect_extensions = ["dart"]
 detect_files = ["pubspec.yaml", "pubspec.yml"]
 
-[flutter]
-symbol = " "
-format = "[$symbol($version )]($style)"
-style = "bold blue"
-detect_extensions = ["dart"]
-detect_files = ["pubspec.yaml", "pubspec.yml"]
+# Flutter is now part of Dart module
+# [flutter]
+# symbol = " "
+# format = "[$symbol($version )]($style)"
+# style = "bold blue"
+# detect_extensions = ["dart"]
+# detect_files = ["pubspec.yaml", "pubspec.yml"]
 
 [ruby]
 symbol = " "

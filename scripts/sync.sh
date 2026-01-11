@@ -158,11 +158,29 @@ sync_file() {
     safe_mkdir "$target_dir" || return 1
     
     # ファイル/ディレクトリのコピー
+    # 既に存在する場合は、同一かどうかをチェック
+    if [[ -e "$target" ]] && [[ -f "$source" ]] && [[ -f "$target" ]]; then
+        if cmp -s "$source" "$target" 2>/dev/null; then
+            log_debug "ファイルは既に同一です: $target"
+            log_success "同期完了: ${description}（変更なし）"
+            return 0
+        fi
+    fi
+    
+    # ファイル/ディレクトリのコピー
     if cp -r "$source" "$target" 2>/dev/null; then
-        log_success "同期完了: $description"
+        log_success "同期完了: ${description}"
         return 0
     else
-        log_error "同期に失敗しました: $description"
+        # cpが失敗した場合でも、ターゲットが存在し、同一の場合は成功として扱う
+        if [[ -e "$target" ]] && [[ -f "$source" ]] && [[ -f "$target" ]]; then
+            if cmp -s "$source" "$target" 2>/dev/null; then
+                log_debug "ファイルは既に同一です: $target"
+                log_success "同期完了: ${description}（変更なし）"
+                return 0
+            fi
+        fi
+        log_error "同期に失敗しました: ${description}"
         return 1
     fi
 }
@@ -200,6 +218,8 @@ sync_shell() {
         sync_file "$dotfiles_root/zsh/zprofile" "$HOME/.zprofile" "Zshプロファイル"
         sync_file "$dotfiles_root/zsh/sheldon" "$(get_config_dir sheldon)" "Sheldon設定"
         sync_file "$dotfiles_root/starship/.config/starship.toml" "$(get_config_dir)/starship.toml" "Starship設定"
+        sync_file "$dotfiles_root/npm/npmrc" "$HOME/.npmrc" "npm設定"
+        sync_file "$dotfiles_root/npm/.config/npm/npmrc" "$(get_config_dir)/npm/npmrc" "npmグローバル設定"
     else
         # local -> dotfiles
         sync_file "$HOME/.zshrc" "$dotfiles_root/zsh/zshrc" "Zsh設定"
@@ -207,6 +227,8 @@ sync_shell() {
         sync_file "$HOME/.zprofile" "$dotfiles_root/zsh/zprofile" "Zshプロファイル"
         sync_file "$(get_config_dir sheldon)" "$dotfiles_root/zsh/sheldon" "Sheldon設定"
         sync_file "$(get_config_dir)/starship.toml" "$dotfiles_root/starship/.config/starship.toml" "Starship設定"
+        sync_file "$HOME/.npmrc" "$dotfiles_root/npm/npmrc" "npm設定"
+        sync_file "$(get_config_dir)/npm/npmrc" "$dotfiles_root/npm/.config/npm/npmrc" "npmグローバル設定"
     fi
 }
 

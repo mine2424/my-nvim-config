@@ -90,6 +90,10 @@ dotfiles/
 ├── starship/                       # ⭐ Starship設定
 │   └── .config/
 │       └── starship.toml           # プロンプト設定
+├── npm/                            # 📦 npm設定
+│   ├── npmrc                       # プロジェクト設定
+│   └── .config/npm/
+│       └── npmrc                   # グローバル設定
 ├── cursor/                         # 🤖 Cursor設定（予定）
 ├── cli-tools/                      # 🛠️ CLIツール設定（予定）
 ├── apps/                           # 📱 アプリケーション設定（予定）
@@ -113,7 +117,7 @@ dotfiles/
 ```bash
 # macOS
 brew install --cask font-monaspice-nerd-font
-brew install font-moralerspace
+brew install --cask font-moralerspace
 
 # Linux (Ubuntu/Debian)
 mkdir -p ~/.local/share/fonts
