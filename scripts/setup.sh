@@ -1,599 +1,599 @@
-#!/bin/bash
+#!/usr/bin/env bash
+# setup.sh - メインセットアップスクリプト
+# dotfilesの設定を適用し、必要なツールをインストール
 
-# ===============================================
-# Development Environment Setup Script
-# ===============================================
-# Unified setup script for development tools and configurations
-# Supports: macOS, Linux (Ubuntu/Debian)
-
-set -e  # Exit on error
-
-# ===============================================
-# Configuration and Constants
-# ===============================================
-SCRIPT_VERSION="2.0.0"
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
-
-# Color codes for output
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-BLUE='\033[0;34m'
-PURPLE='\033[0;35m'
-CYAN='\033[0;36m'
-BOLD='\033[1m'
-NC='\033[0m' # No Color
-
-# Setup modes
-readonly MODE_FULL="full"
-readonly MODE_QUICK="quick"
-readonly MODE_CONFIG_ONLY="config-only"
-readonly MODE_STARSHIP_ONLY="starship-only"
-
-# Default settings
-INSTALL_STARSHIP=true
-INSTALL_FLUTTER=false
-DRY_RUN=false
-
-# Error handling
 set -euo pipefail
-trap 'log_error "Script failed on line $LINENO"' ERR
 
-# ===============================================
-# Utility Functions
-# ===============================================
+# スクリプトのディレクトリを取得
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-# Logging functions
-log_info() {
-    echo -e "${CYAN}ℹ️  $1${NC}"
-}
+# ユーティリティ関数の読み込み
+# shellcheck source=./utils/common.sh
+source "$SCRIPT_DIR/utils/common.sh"
+# shellcheck source=./utils/os-detect.sh
+source "$SCRIPT_DIR/utils/os-detect.sh"
+# shellcheck source=./utils/logger.sh
+source "$SCRIPT_DIR/utils/logger.sh"
+# shellcheck source=./utils/backup.sh
+source "$SCRIPT_DIR/utils/backup.sh"
 
-log_success() {
-    echo -e "${GREEN}✅ $1${NC}"
-}
+# グローバル変数
+SCRIPT_VERSION="3.0.0"
+DRY_RUN=false
+FORCE=false
+COMPONENT="all"
+INSTALL_DEPENDENCIES=false
+CREATE_BACKUP=true
 
-log_warning() {
-    echo -e "${YELLOW}⚠️  $1${NC}"
-}
+#######################################
+# 使用方法を表示
+#######################################
+show_usage() {
+    cat <<EOF
+使用方法: $(basename "$0") [オプション] [コンポーネント]
 
-log_error() {
-    echo -e "${RED}❌ $1${NC}"
-}
+dotfilesの設定を適用し、必要なツールをインストールします。
 
-log_step() {
-    echo -e "${BLUE}🔄 $1${NC}"
-}
+コンポーネント:
+  --all              すべての設定を適用（デフォルト）
+  --nvim             AstroNvim設定のみ
+  --shell            シェル設定のみ（Zsh + Starship）
+  --terminal         ターミナル設定のみ（WezTerm）
+  --cli              CLIツール設定のみ（Git, tmux等）
 
-# OS Detection
-detect_os() {
-    case "$(uname -s)" in
-        Darwin*)    echo "macOS" ;;
-        Linux*)     
-            if [[ -f /etc/debian_version ]]; then
-                echo "debian"
-            elif [[ -f /etc/redhat-release ]]; then
-                echo "redhat"
-            else
-                echo "linux"
-            fi
-            ;;
-        CYGWIN*|MINGW*|MSYS*) echo "windows" ;;
-        *)          echo "unknown" ;;
-    esac
-}
+オプション:
+  --install          依存関係もインストール
+  --dry-run          実際には適用せず、何が行われるか表示
+  --no-backup        バックアップを作成しない
+  --force            確認なしで実行
+  -h, --help         このヘルプを表示
 
-# Package manager detection
-detect_package_manager() {
-    local os="$1"
-    case "$os" in
-        macOS)
-            if command -v brew &> /dev/null; then
-                echo "brew"
-            else
-                echo "none"
-            fi
-            ;;
-        debian)
-            echo "apt"
-            ;;
-        redhat)
-            echo "yum"
-            ;;
-        *)
-            echo "unknown"
-            ;;
-    esac
-}
+例:
+  # すべての設定を適用（設定ファイルのみ）
+  $(basename "$0") --all
 
-# Check if command exists
-command_exists() {
-    command -v "$1" &> /dev/null
-}
+  # 依存関係もインストールしてフルセットアップ
+  $(basename "$0") --all --install
 
-# ===============================================
-# Display Functions
-# ===============================================
+  # Neovim設定のみ適用
+  $(basename "$0") --nvim
 
-show_banner() {
-    echo -e "${BLUE}${BOLD}"
-    cat << 'EOF'
-    🚀 Development Environment Setup
-    =========================================
-    
-    Complete setup for modern development:
-    ⭐ Starship prompt with Flutter/Dart integration
-    🔧 All configs and key bindings optimized
-    
-EOF
-    echo -e "${NC}"
-    echo -e "${CYAN}Version: $SCRIPT_VERSION${NC}"
-    echo -e "${CYAN}Project: $(basename "$PROJECT_ROOT")${NC}"
-    echo ""
-}
-
-show_help() {
-    cat << EOF
-Usage: $0 [MODE] [OPTIONS]
-
-MODES:
-  (no argument)       Only copy configuration files (default)
-  --full              Complete setup with all installations
-  full                Complete setup with all installations (legacy)
-  quick               Config files only (assumes dependencies installed)
-  config-only         Only copy configuration files (same as default)
-  starship-only       Install and configure Starship only
-
-OPTIONS:
-  --no-starship       Skip Starship installation
-  --no-flutter        Skip Flutter installation
-  --dry-run           Show what would be done without executing
-  --help, -h          Show this help message
-
-EXAMPLES:
-  $0                          # Copy configs only (safe default)
-  $0 --full                   # Full setup with all components
-  $0 full                     # Full setup (legacy syntax)
-  $0 quick                    # Quick setup (configs only)
-  $0 config-only              # Copy configs only (explicit)
-  $0 starship-only            # Install Starship only
-  $0 --full --no-flutter      # Full setup without Flutter
+  # ドライランモード
+  $(basename "$0") --all --dry-run
 
 EOF
 }
 
-# ===============================================
-# Installation Functions
-# ===============================================
-
-install_homebrew() {
-    if ! command_exists brew; then
-        log_step "Installing Homebrew..."
-        if [[ ! "$DRY_RUN" == "true" ]]; then
-            /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-        fi
-        log_success "Homebrew installed"
-    else
-        log_success "Homebrew already installed"
-    fi
-}
-
-install_packages_macos() {
-    log_step "Installing packages via Homebrew..."
-    # Essential packages only - removed btop (resource heavy)
-    local packages=(
-        "git"
-        "ripgrep"
-        "fd"
-        "fzf"
-        "node"
-        "tmux"
-        "sheldon"     # Plugin manager for zsh
-        "eza"         # Modern replacement for ls
-        "bat"         # Modern replacement for cat
-        "lazygit"     # Terminal UI for git
-        "mise"        # Runtime version manager (formerly rtx)
-    )
-    
-    
-    if [[ "$INSTALL_FLUTTER" == "true" ]]; then
-        packages+=("--cask flutter")
-    fi
-    
-    if [[ ! "$DRY_RUN" == "true" ]]; then
-        brew update
-        for package in "${packages[@]}"; do
-            if [[ "$package" == "--cask"* ]]; then
-                brew install $package || log_warning "Failed to install $package"
-            else
-                brew install "$package" || log_warning "Failed to install $package"
-            fi
-        done
-    fi
-    
-    log_success "Package installation completed"
-}
-
-install_packages_debian() {
-    log_step "Installing packages via apt..."
-    
-    if [[ ! "$DRY_RUN" == "true" ]]; then
-        sudo apt update
-        sudo apt install -y \
-            curl \
-            git \
-            build-essential \
-            ripgrep \
-            fd-find \
-            fzf \
-            tmux \
-            nodejs \
-            npm \
-            direnv        # Directory-based environment management
-        
-        # Install modern CLI tools via cargo
-        log_step "Installing modern CLI tools..."
-        # Install tools one by one to handle failures gracefully
-        local rust_tools=("eza" "bat" "dust" "duf" "procs")
-        for tool in "${rust_tools[@]}"; do
-            if ! command_exists "$tool"; then
-                cargo install "$tool" || log_warning "Failed to install $tool"
-            fi
-        done
-        
-        # Install sheldon
-        if ! command_exists sheldon; then
-            log_step "Installing sheldon..."
-            curl --proto '=https' -fLsS https://rossmacarthur.github.io/install/crate.sh | bash -s -- --repo rossmacarthur/sheldon --to ~/.local/bin
-        fi
-        
-        # Install lazygit
-        if ! command_exists lazygit; then
-            log_step "Installing lazygit..."
-            LAZYGIT_VERSION=$(curl -s "https://api.github.com/repos/jesseduffield/lazygit/releases/latest" | grep -Po '"tag_name": "v\K[^"]*')
-            curl -Lo lazygit.tar.gz "https://github.com/jesseduffield/lazygit/releases/latest/download/lazygit_${LAZYGIT_VERSION}_Linux_x86_64.tar.gz"
-            tar xf lazygit.tar.gz lazygit
-            sudo install lazygit /usr/local/bin
-            rm lazygit.tar.gz lazygit
-        fi
-        
-        # Install mise
-        if ! command_exists mise; then
-            log_step "Installing mise..."
-            curl https://mise.run | sh
-        fi
-    fi
-    
-    log_success "Package installation completed"
-}
-
-install_starship() {
-    if command_exists starship; then
-        log_success "Starship already installed ($(starship --version))"
-        return 0
-    fi
-    
-    log_step "Installing Starship..."
-    if [[ ! "$DRY_RUN" == "true" ]]; then
-        curl -sS https://starship.rs/install.sh | sh -s -- --yes
-    fi
-    log_success "Starship installed"
-}
-
-# ===============================================
-# Configuration Functions
-# ===============================================
-
-setup_directories() {
-    log_step "Setting up configuration directories..."
-    
-    local dirs=(
-        "$HOME/.config/sheldon"
-        "$HOME/.local/bin"
-    )
-    
-    for dir in "${dirs[@]}"; do
-        if [[ ! "$DRY_RUN" == "true" ]]; then
-            mkdir -p "$dir"
-        fi
-    done
-    
-    log_success "Directories created"
-}
-
-install_starship_config() {
-    if [[ "$INSTALL_STARSHIP" != "true" ]]; then
-        log_info "Skipping Starship configuration"
-        return 0
-    fi
-    
-    log_step "Installing Starship configuration..."
-    
-    # Install Starship if not installed
-    install_starship
-    
-    # Copy Starship config
-    if [[ ! "$DRY_RUN" == "true" ]]; then
-        mkdir -p "$HOME/.config"
-        cp "$PROJECT_ROOT/starship.toml" "$HOME/.config/starship.toml"
-    fi
-    
-    # Configure shell integration
-    configure_starship_shell
-    
-    log_success "Starship configuration installed"
-}
-
-
-install_zsh_config() {
-    log_step "Installing Zsh configuration..."
-    
-    # Check if zsh is installed
-    if ! command_exists zsh; then
-        log_warning "Zsh is not installed. Please install zsh first."
-        return 1
-    fi
-    
-    # Copy zsh configuration
-    if [[ ! "$DRY_RUN" == "true" ]]; then
-        # Install main zshrc
-        cp "$PROJECT_ROOT/zsh/zshrc" "$HOME/.zshrc"
-        
-        # Install sheldon plugins configuration
-        mkdir -p "$HOME/.config/sheldon"
-        cp "$PROJECT_ROOT/zsh/sheldon/plugins.toml" "$HOME/.config/sheldon/plugins.toml"
-        
-        # Create local zshrc for user customizations
-        if [[ ! -f "$HOME/.zshrc.local" ]]; then
-            cat > "$HOME/.zshrc.local" << 'EOF'
-# Local zsh customizations
-# Add your personal configurations here
-
-# ===== Your Personal Customizations =====
-
-EOF
-            log_success "Created ~/.zshrc.local"
-        fi
-    fi
-    
-    log_success "Zsh configuration installed"
-    
-    # Install sheldon if not already installed
-    if ! command_exists sheldon; then
-        log_step "Installing sheldon plugin manager..."
-        if [[ ! "$DRY_RUN" == "true" ]]; then
-            local os=$(detect_os)
-            case "$os" in
-                macOS)
-                    brew install sheldon
-                    ;;
-                debian|linux)
-                    curl --proto '=https' -fLsS https://rossmacarthur.github.io/install/crate.sh | bash -s -- --repo rossmacarthur/sheldon --to ~/.local/bin
-                    ;;
-            esac
-        fi
-    fi
-    
-    log_success "Zsh setup completed"
-}
-
-configure_starship_shell() {
-    local shell_name=$(basename "$SHELL")
-    local shell_rc=""
-    local init_command=""
-    
-    case "$shell_name" in
-        zsh)
-            shell_rc="$HOME/.zshrc"
-            init_command='eval "$(starship init zsh)"'
-            ;;
-        bash)
-            shell_rc="$HOME/.bashrc"
-            init_command='eval "$(starship init bash)"'
-            ;;
-        fish)
-            shell_rc="$HOME/.config/fish/config.fish"
-            init_command='starship init fish | source'
-            ;;
-        *)
-            log_warning "Unsupported shell: $shell_name"
-            return 1
-            ;;
-    esac
-    
-    # Check if already configured
-    if [[ -f "$shell_rc" ]] && grep -q "starship init" "$shell_rc"; then
-        log_success "Shell already configured for Starship"
-        return 0
-    fi
-    
-    # Add initialization to shell config
-    if [[ ! "$DRY_RUN" == "true" ]]; then
-        # Create backup of shell config
-        cp "$shell_rc" "${shell_rc}.backup.$(date +%Y%m%d_%H%M%S)" || true
-        
-        echo "" >> "$shell_rc"
-        echo "# Starship prompt initialization" >> "$shell_rc"
-        echo "$init_command" >> "$shell_rc"
-    fi
-    
-    log_success "Added Starship initialization to $shell_rc"
-}
-
-# ===============================================
-# Verification Functions
-# ===============================================
-
-verify_installation() {
-    log_step "Verifying installation..."
-    
-    local errors=0
-    
-    # Check Starship (if enabled)
-    if [[ "$INSTALL_STARSHIP" == "true" ]]; then
-        if command_exists starship; then
-            log_success "Starship: $(starship --version)"
-        else
-            log_error "Starship not found"
-            ((errors++))
-        fi
-        
-        if [[ -f "$HOME/.config/starship.toml" ]]; then
-            log_success "Starship config: ✓"
-        else
-            log_error "Starship config not found"
-            ((errors++))
-        fi
-    fi
-    
-    
-    if [[ $errors -eq 0 ]]; then
-        log_success "All components verified successfully!"
-        return 0
-    else
-        log_error "Verification failed with $errors errors"
-        return 1
-    fi
-}
-
-show_completion_message() {
-    echo ""
-    echo -e "${GREEN}${BOLD}🎉 Setup completed successfully!${NC}"
-    echo ""
-    echo -e "${YELLOW}Next steps:${NC}"
-    echo "1. Restart your terminal or run: source ~/.$(basename $SHELL)rc"
-    if [[ "$INSTALL_STARSHIP" == "true" ]]; then
-        echo "2. Test Starship prompt in a Git repository"
-    fi
-    echo ""
-    echo -e "${CYAN}Key features installed:${NC}"
-    echo "• Modern Zsh configuration with fast plugin management"
-    if [[ "$INSTALL_STARSHIP" == "true" ]]; then
-        echo "• Starship prompt with Flutter/Dart integration"
-    fi
-    echo "• Essential CLI tools (eza, bat, lazygit)"
-}
-
-# ===============================================
-# Main Setup Logic
-# ===============================================
-
-main() {
-    show_banner
-    
-    # Parse arguments
-    local mode="$MODE_CONFIG_ONLY"
-    
+#######################################
+# 引数を解析
+#######################################
+parse_arguments() {
     while [[ $# -gt 0 ]]; do
-        case $1 in
-            --full)
-                mode="$MODE_FULL"
+        case "$1" in
+            --all)
+                COMPONENT="all"
                 shift
                 ;;
-            full|quick|config-only|starship-only)
-                mode="$1"
+            --nvim)
+                COMPONENT="nvim"
                 shift
                 ;;
-            --no-starship)
-                INSTALL_STARSHIP=false
+            --shell)
+                COMPONENT="shell"
                 shift
                 ;;
-            --no-flutter)
-                INSTALL_FLUTTER=false
+            --terminal)
+                COMPONENT="terminal"
+                shift
+                ;;
+            --cli)
+                COMPONENT="cli"
+                shift
+                ;;
+            --install)
+                INSTALL_DEPENDENCIES=true
                 shift
                 ;;
             --dry-run)
                 DRY_RUN=true
                 shift
                 ;;
-            --help|-h)
-                show_help
+            --no-backup)
+                CREATE_BACKUP=false
+                shift
+                ;;
+            --force)
+                FORCE=true
+                shift
+                ;;
+            -h|--help)
+                show_usage
                 exit 0
                 ;;
             *)
-                log_error "Unknown option: $1"
-                show_help
+                log_error "不明なオプション: $1"
+                show_usage
                 exit 1
                 ;;
         esac
     done
+}
+
+#######################################
+# 必須要件を確認
+#######################################
+check_requirements() {
+    log_section "必須要件の確認"
     
-    # Show dry run warning
-    if [[ "$DRY_RUN" == "true" ]]; then
-        log_warning "DRY RUN MODE - No changes will be made"
-        echo ""
-    fi
+    local missing_commands=()
     
-    # Detect OS and package manager
-    local os=$(detect_os)
-    local pkg_mgr=$(detect_package_manager "$os")
+    # 基本コマンドの確認
+    local required_commands=("git" "curl")
     
-    log_info "Detected OS: $os"
-    log_info "Package Manager: $pkg_mgr"
-    log_info "Setup Mode: $mode"
-    echo ""
-    
-    # Confirm before proceeding (skip for config-only mode)
-    if [[ "$DRY_RUN" != "true" ]] && [[ "$mode" != "$MODE_CONFIG_ONLY" ]]; then
-        echo -e "${YELLOW}This will modify your system and configuration files.${NC}"
-        read -p "Continue? (y/N): " -n 1 -r
-        echo
-        if [[ ! $REPLY =~ ^[Yy]$ ]]; then
-            log_info "Setup cancelled by user"
-            exit 0
+    for cmd in "${required_commands[@]}"; do
+        if ! check_command "$cmd"; then
+            missing_commands+=("$cmd")
         fi
-        echo ""
+    done
+    
+    if [[ ${#missing_commands[@]} -gt 0 ]]; then
+        log_error "必須コマンドが見つかりません: ${missing_commands[*]}"
+        log_info "以下のコマンドをインストールしてください"
+        for cmd in "${missing_commands[@]}"; do
+            echo "  - $cmd"
+        done
+        return 1
     fi
     
-    # Execute setup based on mode
-    case "$mode" in
-        "$MODE_FULL")
-            # Full installation
-            case "$os" in
-                macOS)
-                    install_homebrew
-                    install_packages_macos
-                    ;;
-                debian)
-                    install_packages_debian
-                    ;;
-                *)
-                    log_error "Unsupported OS for full installation: $os"
-                    exit 1
-                    ;;
-            esac
-            
-            setup_directories
-            install_zsh_config
-            install_starship_config
+    log_success "すべての必須要件が満たされています"
+    return 0
+}
+
+#######################################
+# 依存関係をインストール
+#######################################
+install_dependencies() {
+    log_section "依存関係のインストール"
+    
+    local os
+    os="$(detect_os)"
+    local pkg_manager
+    pkg_manager="$(detect_package_manager)"
+    
+    log_info "OS: $os"
+    log_info "パッケージマネージャ: $pkg_manager"
+    
+    if [[ "$DRY_RUN" == "true" ]]; then
+        log_info "[DRY RUN] 依存関係のインストールをスキップ"
+        return 0
+    fi
+    
+    case "$os" in
+        "$OS_MACOS")
+            install_dependencies_macos
             ;;
-            
-        "$MODE_QUICK")
-            # Quick setup (dependencies assumed)
-            setup_directories
-            install_zsh_config
-            install_starship_config
+        "$OS_LINUX"|"$OS_WSL")
+            install_dependencies_linux
             ;;
-            
-        "$MODE_CONFIG_ONLY")
-            # Configuration files only
-            setup_directories
+        *)
+            log_error "未対応のOS: $os"
+            return 1
             ;;
-            
-        "$MODE_STARSHIP_ONLY")
-            # Starship only
-            install_starship_config
+    esac
+}
+
+#######################################
+# macOS用の依存関係をインストール
+#######################################
+install_dependencies_macos() {
+    # Homebrewのインストール確認
+    if ! check_command brew; then
+        log_info "Homebrewをインストールしています..."
+        /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+    fi
+    
+    log_info "パッケージをインストールしています..."
+    
+    local packages=()
+    
+    case "$COMPONENT" in
+        all|nvim)
+            packages+=("neovim" "ripgrep" "fd" "lazygit")
             ;;
     esac
     
-    # Verify installation
-    if [[ "$mode" != "$MODE_STARSHIP_ONLY" ]]; then
-        verify_installation
+    case "$COMPONENT" in
+        all|shell)
+            packages+=("zsh" "sheldon" "starship")
+            ;;
+    esac
+    
+    case "$COMPONENT" in
+        all|terminal)
+            packages+=("--cask wezterm")
+            ;;
+    esac
+    
+    case "$COMPONENT" in
+        all|cli)
+            packages+=("git" "tmux" "fzf" "bat" "eza")
+            ;;
+    esac
+    
+    if [[ ${#packages[@]} -gt 0 ]]; then
+        brew install "${packages[@]}" || log_warn "一部のパッケージのインストールに失敗しました"
     fi
     
-    # Show completion message
-    show_completion_message
+    log_success "依存関係のインストールが完了しました"
 }
 
-# Run main function with all arguments
+#######################################
+# Linux用の依存関係をインストール
+#######################################
+install_dependencies_linux() {
+    local distro
+    distro="$(detect_linux_distro)"
+    
+    log_info "ディストリビューション: $distro"
+    
+    case "$distro" in
+        ubuntu|debian)
+            install_dependencies_debian
+            ;;
+        fedora|rhel)
+            install_dependencies_fedora
+            ;;
+        arch|manjaro)
+            install_dependencies_arch
+            ;;
+        *)
+            log_warn "未対応のディストリビューション: $distro"
+            log_info "手動でパッケージをインストールしてください"
+            return 1
+            ;;
+    esac
+}
+
+#######################################
+# Debian/Ubuntu用の依存関係をインストール
+#######################################
+install_dependencies_debian() {
+    sudo apt update
+    
+    local packages=()
+    
+    case "$COMPONENT" in
+        all|nvim)
+            packages+=("neovim" "ripgrep" "fd-find")
+            ;;
+    esac
+    
+    case "$COMPONENT" in
+        all|shell)
+            packages+=("zsh")
+            ;;
+    esac
+    
+    case "$COMPONENT" in
+        all|cli)
+            packages+=("git" "tmux" "fzf")
+            ;;
+    esac
+    
+    if [[ ${#packages[@]} -gt 0 ]]; then
+        sudo apt install -y "${packages[@]}" || log_warn "一部のパッケージのインストールに失敗しました"
+    fi
+    
+    # Sheldonのインストール
+    if [[ "$COMPONENT" == "all" ]] || [[ "$COMPONENT" == "shell" ]]; then
+        if ! check_command sheldon; then
+            log_info "Sheldonをインストールしています..."
+            curl --proto '=https' -fLsS https://rossmacarthur.github.io/install/crate.sh | \
+                bash -s -- --repo rossmacarthur/sheldon --to ~/.local/bin
+        fi
+    fi
+    
+    # Starshipのインストール
+    if [[ "$COMPONENT" == "all" ]] || [[ "$COMPONENT" == "shell" ]]; then
+        if ! check_command starship; then
+            log_info "Starshipをインストールしています..."
+            curl -sS https://starship.rs/install.sh | sh -s -- --yes
+        fi
+    fi
+    
+    log_success "依存関係のインストールが完了しました"
+}
+
+#######################################
+# Fedora/RHEL用の依存関係をインストール
+#######################################
+install_dependencies_fedora() {
+    log_warn "Fedora/RHELのサポートは未実装です"
+    return 1
+}
+
+#######################################
+# Arch用の依存関係をインストール
+#######################################
+install_dependencies_arch() {
+    log_warn "Archのサポートは未実装です"
+    return 1
+}
+
+#######################################
+# AstroNvim設定を適用
+#######################################
+setup_nvim() {
+    log_section "AstroNvim設定の適用"
+    
+    local dotfiles_root
+    dotfiles_root="$(get_dotfiles_root)"
+    local nvim_config_src="$dotfiles_root/nvim"
+    local nvim_config_dest="$(get_config_dir nvim)"
+    
+    if [[ ! -d "$nvim_config_src" ]]; then
+        log_warn "Neovim設定が見つかりません: $nvim_config_src"
+        log_info "後で実装します"
+        return 0
+    fi
+    
+    if [[ "$DRY_RUN" == "true" ]]; then
+        log_info "[DRY RUN] Neovim設定を適用: $nvim_config_src -> $nvim_config_dest"
+        return 0
+    fi
+    
+    # シンボリックリンクの作成
+    if safe_symlink "$nvim_config_src" "$nvim_config_dest" "$CREATE_BACKUP"; then
+        log_success "Neovim設定を適用しました"
+    else
+        log_error "Neovim設定の適用に失敗しました"
+        return 1
+    fi
+}
+
+#######################################
+# シェル設定を適用
+#######################################
+setup_shell() {
+    log_section "シェル設定の適用"
+    
+    local dotfiles_root
+    dotfiles_root="$(get_dotfiles_root)"
+    
+    # Zsh設定
+    local zshrc_src="$dotfiles_root/zsh/zshrc"
+    local zshrc_dest="$HOME/.zshrc"
+    
+    if [[ -f "$zshrc_src" ]]; then
+        if [[ "$DRY_RUN" == "true" ]]; then
+            log_info "[DRY RUN] Zsh設定を適用: $zshrc_src -> $zshrc_dest"
+        else
+            if safe_symlink "$zshrc_src" "$zshrc_dest" "$CREATE_BACKUP"; then
+                log_success "Zsh設定を適用しました"
+            fi
+        fi
+    fi
+    
+    # Sheldon設定
+    local sheldon_src="$dotfiles_root/zsh/sheldon"
+    local sheldon_dest="$(get_config_dir sheldon)"
+    
+    if [[ -d "$sheldon_src" ]]; then
+        if [[ "$DRY_RUN" == "true" ]]; then
+            log_info "[DRY RUN] Sheldon設定を適用: $sheldon_src -> $sheldon_dest"
+        else
+            if safe_symlink "$sheldon_src" "$sheldon_dest" "$CREATE_BACKUP"; then
+                log_success "Sheldon設定を適用しました"
+            fi
+        fi
+    fi
+    
+    # Starship設定
+    local starship_src="$dotfiles_root/starship"
+    local starship_dest="$(get_config_dir)"
+    
+    if [[ -d "$starship_src" ]]; then
+        if [[ "$DRY_RUN" == "true" ]]; then
+            log_info "[DRY RUN] Starship設定を適用予定"
+        else
+            log_info "Starship設定は後で実装します"
+        fi
+    fi
+}
+
+#######################################
+# ターミナル設定を適用
+#######################################
+setup_terminal() {
+    log_section "ターミナル設定の適用"
+    
+    local dotfiles_root
+    dotfiles_root="$(get_dotfiles_root)"
+    
+    # WezTerm設定
+    local wezterm_src="$dotfiles_root/wezterm"
+    local wezterm_dest="$(get_config_dir wezterm)"
+    
+    if [[ -d "$wezterm_src" ]]; then
+        if [[ "$DRY_RUN" == "true" ]]; then
+            log_info "[DRY RUN] WezTerm設定を適用予定"
+        else
+            log_info "WezTerm設定は後で実装します"
+        fi
+    else
+        log_info "WezTerm設定は後で実装します"
+    fi
+}
+
+#######################################
+# CLIツール設定を適用
+#######################################
+setup_cli_tools() {
+    log_section "CLIツール設定の適用"
+    
+    local dotfiles_root
+    dotfiles_root="$(get_dotfiles_root)"
+    
+    log_info "CLIツール設定は後で実装します"
+}
+
+#######################################
+# すべての設定を適用
+#######################################
+setup_all() {
+    setup_nvim
+    setup_shell
+    setup_terminal
+    setup_cli_tools
+}
+
+#######################################
+# セットアップ前の確認
+#######################################
+confirm_setup() {
+    if [[ "$FORCE" == "true" ]]; then
+        return 0
+    fi
+    
+    if [[ "$DRY_RUN" == "true" ]]; then
+        return 0
+    fi
+    
+    echo ""
+    log_warn "以下の設定が適用されます:"
+    
+    case "$COMPONENT" in
+        all)
+            echo "  - AstroNvim設定"
+            echo "  - シェル設定（Zsh + Starship）"
+            echo "  - ターミナル設定（WezTerm）"
+            echo "  - CLIツール設定（Git, tmux等）"
+            ;;
+        nvim)
+            echo "  - AstroNvim設定"
+            ;;
+        shell)
+            echo "  - シェル設定（Zsh + Starship）"
+            ;;
+        terminal)
+            echo "  - ターミナル設定（WezTerm）"
+            ;;
+        cli)
+            echo "  - CLIツール設定（Git, tmux等）"
+            ;;
+    esac
+    
+    echo ""
+    
+    if [[ "$CREATE_BACKUP" == "true" ]]; then
+        log_info "既存設定のバックアップが作成されます"
+    else
+        log_warn "バックアップは作成されません"
+    fi
+    
+    if [[ "$INSTALL_DEPENDENCIES" == "true" ]]; then
+        log_info "依存関係もインストールされます"
+    fi
+    
+    echo ""
+    
+    if ! confirm "続行しますか？" "n"; then
+        log_info "キャンセルしました"
+        exit 0
+    fi
+}
+
+#######################################
+# サマリーを表示
+#######################################
+show_summary() {
+    log_section "セットアップ完了"
+    
+    if [[ "$DRY_RUN" == "true" ]]; then
+        log_info "ドライランモードで実行しました"
+        log_info "実際にセットアップするには --dry-run オプションを外してください"
+    else
+        log_success "セットアップが完了しました"
+        
+        echo ""
+        log_info "次のステップ:"
+        echo "  1. シェルを再起動: exec \$SHELL"
+        echo "  2. 設定を確認: $(basename "$0") --help"
+        echo "  3. 検証を実行: ./scripts/verify-setup.sh"
+    fi
+}
+
+#######################################
+# メイン処理
+#######################################
+main() {
+    # 引数の解析
+    parse_arguments "$@"
+    
+    # ヘッダー表示
+    log_section "Dotfiles セットアップスクリプト v${SCRIPT_VERSION}"
+    
+    if [[ "$DRY_RUN" == "true" ]]; then
+        log_info "モード: ドライラン（実際には適用しません）"
+    fi
+    
+    log_info "コンポーネント: $COMPONENT"
+    
+    # システム情報の表示
+    log_debug "OS: $(detect_os)"
+    log_debug "設定ディレクトリ: $(get_config_dir)"
+    
+    # 必須要件の確認
+    if ! check_requirements; then
+        exit 1
+    fi
+    
+    # 確認
+    confirm_setup
+    
+    # バックアップの作成
+    if [[ "$CREATE_BACKUP" == "true" ]] && [[ "$DRY_RUN" == "false" ]]; then
+        log_section "既存設定のバックアップ"
+        if ! create_backup "$COMPONENT"; then
+            log_warn "バックアップの作成に失敗しました"
+            if ! confirm "バックアップなしで続行しますか？" "n"; then
+                log_info "キャンセルしました"
+                exit 1
+            fi
+        fi
+    fi
+    
+    # 依存関係のインストール
+    if [[ "$INSTALL_DEPENDENCIES" == "true" ]]; then
+        install_dependencies
+    fi
+    
+    # セットアップの実行
+    case "$COMPONENT" in
+        all)
+            setup_all
+            ;;
+        nvim)
+            setup_nvim
+            ;;
+        shell)
+            setup_shell
+            ;;
+        terminal)
+            setup_terminal
+            ;;
+        cli)
+            setup_cli_tools
+            ;;
+        *)
+            log_error "不明なコンポーネント: $COMPONENT"
+            exit 1
+            ;;
+    esac
+    
+    # サマリー表示
+    show_summary
+}
+
+# スクリプトの実行
 main "$@"
