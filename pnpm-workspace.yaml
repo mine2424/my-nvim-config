@@ -1,7 +1,0 @@
-# pnpm workspace configuration
-packages:
-  - "packages/*"
-  - "apps/*"
-  - "tools/*"
-  - "examples/*"
-  - "!**/node_modules/**"
