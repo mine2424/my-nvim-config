@@ -112,8 +112,8 @@ dotfiles/
 
 ```bash
 # macOS
-brew tap homebrew/cask-fonts
-brew install font-moralerspace font-moralerspace-nerd-font
+brew install --cask font-monaspice-nerd-font
+brew install font-moralerspace
 
 # Linux (Ubuntu/Debian)
 mkdir -p ~/.local/share/fonts
