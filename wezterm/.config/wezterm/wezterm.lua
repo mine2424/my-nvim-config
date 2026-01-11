@@ -41,7 +41,7 @@ config.warn_about_missing_glyphs = false
 config.adjust_window_size_when_changing_font_size = false
 config.integrated_title_button_style = "Windows"
 config.window_decorations = "RESIZE"
-config.window_background_opacity = 0.85
+config.window_background_opacity = 0.6 -- Gist style
 config.window_padding = {
 	left = "0.5cell",
 	right = "0.5cell",
@@ -464,13 +464,13 @@ wezterm.on("update-right-status", function(window, pane)
 	window:set_right_status(wezterm.format({
 		{ Background = { Color = title_color_bg } },
 		{ Foreground = { Color = bg1 } },
-		{ Text = " " },
+		{ Text = "" },
 		{ Background = { Color = title_color_bg:lighten(0.1) } },
 		{ Foreground = { Color = title_color_fg } },
 		{ Text = " " .. window:active_workspace() .. " " },
 		{ Foreground = { Color = bg1 } },
 		{ Background = { Color = bg2 } },
-		{ Text = " " },
+		{ Text = "" },
 		{ Foreground = { Color = title_color_bg:lighten(0.4) } },
 		{ Foreground = { Color = title_color_fg } },
 		{ Text = " " .. time .. " " .. bat },
