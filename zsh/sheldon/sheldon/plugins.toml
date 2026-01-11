@@ -1,0 +1,219 @@
+# ========================================
+# Sheldon Plugin Configuration
+# ========================================
+# Plugin manager for Zsh
+# https://sheldon.cli.rs/
+
+shell = "zsh"
+
+# ========================================
+# Core Plugins
+# ========================================
+
+# Deferred loading for faster startup
+[plugins.zsh-defer]
+github = "romkatv/zsh-defer"
+
+# ========================================
+# Completion Plugins
+# ========================================
+
+# Additional completions
+[plugins.zsh-completions]
+github = "zsh-users/zsh-completions"
+apply = ["fpath"]
+
+# FZF integration
+[plugins.fzf]
+github = "junegunn/fzf"
+use = ["shell/completion.zsh", "shell/key-bindings.zsh"]
+
+# FZF completions
+[plugins.fzf-zsh-completions]
+github = "chitoku-k/fzf-zsh-completions"
+
+# Git completions
+[plugins.git-completions]
+github = "ohmyzsh/ohmyzsh"
+dir = "plugins/git"
+use = ["git.plugin.zsh"]
+
+# Docker completions
+[plugins.docker-completions]
+github = "ohmyzsh/ohmyzsh"
+dir = "plugins/docker"
+use = ["docker.plugin.zsh"]
+
+# Kubectl completions
+[plugins.kubectl-completions]
+github = "ohmyzsh/ohmyzsh"
+dir = "plugins/kubectl"
+use = ["kubectl.plugin.zsh"]
+
+# ========================================
+# Productivity Plugins
+# ========================================
+
+# Auto suggestions
+[plugins.zsh-autosuggestions]
+github = "zsh-users/zsh-autosuggestions"
+use = ["zsh-autosuggestions.zsh"]
+
+# History substring search
+[plugins.zsh-history-substring-search]
+github = "zsh-users/zsh-history-substring-search"
+use = ["zsh-history-substring-search.zsh"]
+
+# Fast syntax highlighting (must be loaded last)
+[plugins.fast-syntax-highlighting]
+github = "zdharma-continuum/fast-syntax-highlighting"
+
+# ========================================
+# Directory Navigation
+# ========================================
+
+# Directory environment management
+[plugins.direnv]
+github = "ohmyzsh/ohmyzsh"
+dir = "plugins/direnv"
+
+# ========================================
+# Development Tools
+# ========================================
+
+# Homebrew
+[plugins.brew]
+github = "wintermi/zsh-brew"
+
+# Node.js / NPM
+[plugins.npm]
+github = "ohmyzsh/ohmyzsh"
+dir = "plugins/npm"
+
+# Python
+[plugins.python]
+github = "ohmyzsh/ohmyzsh"
+dir = "plugins/python"
+
+# Rust
+[plugins.rust]
+github = "ohmyzsh/ohmyzsh"
+dir = "plugins/rust"
+
+# ========================================
+# Custom Inline Plugins
+# ========================================
+
+# Auto suggestions configuration
+[plugins.autosuggestions-config]
+inline = '''
+# Auto suggestions styling
+ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE='fg=240'
+ZSH_AUTOSUGGEST_STRATEGY=(history completion)
+ZSH_AUTOSUGGEST_BUFFER_MAX_SIZE=20
+ZSH_AUTOSUGGEST_USE_ASYNC=1
+'''
+
+# History substring search configuration
+[plugins.history-search-config]
+inline = '''
+# History substring search key bindings
+bindkey '^[[A' history-substring-search-up
+bindkey '^[[B' history-substring-search-down
+bindkey '^P' history-substring-search-up
+bindkey '^N' history-substring-search-down
+
+# History substring search styling
+HISTORY_SUBSTRING_SEARCH_HIGHLIGHT_FOUND='bg=green,fg=white,bold'
+HISTORY_SUBSTRING_SEARCH_HIGHLIGHT_NOT_FOUND='bg=red,fg=white,bold'
+HISTORY_SUBSTRING_SEARCH_FUZZY=1
+'''
+
+# Runtime version managers
+[plugins.version-managers]
+inline = '''
+# mise (formerly rtx) - Runtime version manager
+if command -v mise &> /dev/null; then
+    eval "$(mise activate zsh)"
+fi
+
+# fnm - Fast Node Manager
+if command -v fnm &> /dev/null; then
+    eval "$(fnm env --use-on-cd)"
+fi
+
+# rbenv - Ruby version manager
+if command -v rbenv &> /dev/null; then
+    eval "$(rbenv init - zsh)"
+fi
+
+# pyenv - Python version manager
+if command -v pyenv &> /dev/null; then
+    eval "$(pyenv init -)"
+fi
+'''
+
+# Additional tool integrations
+[plugins.tool-integrations]
+inline = '''
+# GitHub CLI
+if command -v gh &> /dev/null; then
+    eval "$(gh completion -s zsh)"
+fi
+
+# Terraform
+if command -v terraform &> /dev/null; then
+    complete -o nospace -C $(which terraform) terraform
+fi
+
+# AWS CLI
+if command -v aws &> /dev/null && [[ -f /usr/local/bin/aws_zsh_completer.sh ]]; then
+    source /usr/local/bin/aws_zsh_completer.sh
+fi
+'''
+
+# Custom key bindings
+[plugins.custom-keybindings]
+inline = '''
+# Edit command line in editor
+autoload -Uz edit-command-line
+zle -N edit-command-line
+bindkey '^X^E' edit-command-line
+
+# Undo/Redo
+bindkey '^Z' undo
+bindkey '^Y' redo
+
+# Word movement
+bindkey '^[[1;5C' forward-word    # Ctrl+Right
+bindkey '^[[1;5D' backward-word   # Ctrl+Left
+
+# Delete word
+bindkey '^H' backward-kill-word   # Ctrl+Backspace
+bindkey '^[[3;5~' kill-word       # Ctrl+Delete
+'''
+
+# Performance optimizations
+[plugins.performance]
+inline = '''
+# Disable unnecessary features for better performance
+DISABLE_MAGIC_FUNCTIONS=true
+DISABLE_AUTO_UPDATE=true
+DISABLE_UPDATE_PROMPT=true
+
+# Lazy load heavy commands
+lazy_load() {
+    local cmd="$1"
+    shift
+    local load_cmd="$*"
+    
+    eval "$cmd() {
+        unfunction $cmd
+        $load_cmd
+        $cmd \"\$@\"
+    }"
+}
+
+# Example: lazy load nvm (if needed)
+# lazy_load nvm 'source $HOME/.nvm/nvm.sh'
+'''

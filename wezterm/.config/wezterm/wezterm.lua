@@ -6,6 +6,8 @@
 local wezterm = require("wezterm")
 local config = wezterm.config_builder()
 
+config.automatically_reload_config = true
+
 -- ========================================
 -- OS Detection
 -- ========================================
@@ -24,13 +26,6 @@ end)()
 -- General Settings
 -- ========================================
 
--- Performance
-config.front_end = "WebGpu"
-config.webgpu_power_preference = "HighPerformance"
-config.max_fps = 120
-config.animation_fps = 120
-config.prefer_egl = true
-
 -- Scrollback
 config.scrollback_lines = 10000
 
@@ -41,7 +36,8 @@ config.warn_about_missing_glyphs = false
 config.adjust_window_size_when_changing_font_size = false
 config.integrated_title_button_style = "Windows"
 config.window_decorations = "RESIZE"
-config.window_background_opacity = 0.6 -- Gist style
+config.window_background_opacity = 0.85
+config.macos_window_background_blur = 8
 config.window_padding = {
 	left = "0.5cell",
 	right = "0.5cell",
@@ -128,33 +124,103 @@ local color_primary = coolors[math.random(#coolors)]
 local title_color_bg = color_primary.bg
 local title_color_fg = color_primary.fg
 
--- Base colors for terminal
+-- ========================================
+-- カラースキーム設定（Neovim統合）
+-- ========================================
+-- 
+-- 注意: Neovimのカラースキーム（tokyonight.nvim）と統合するため、
+-- ターミナルカラー（ansi/brights）はコメントアウトしています。
+-- Neovimが terminal_colors = true で制御します。
+--
+-- タブバーとウィンドウフレームのみカスタマイズ（Tokyo Night Night風）
+
 config.colors = {
-	foreground = "#b9c0cb",
-	background = "#282c34",
-	cursor_bg = "#ffcc00",
-	cursor_fg = "#282c34",
-	cursor_border = "#ffcc00",
-	selection_bg = "#b9c0ca",
-	selection_fg = "#272b33",
-	ansi = { "#41444d", "#fc2f52", "#25a45c", "#ff936a", "#3476ff", "#7a82da", "#4483aa", "#cdd4e0" },
-	brights = { "#8f9aae", "#ff6480", "#3fc56b", "#f9c859", "#10b1fe", "#ff78f8", "#5fb9bc", "#ffffff" },
-	-- Tab bar colors (Gist style)
+	-- ターミナルカラーはNeovimに任せる（コメントアウト）
+	-- Neovimの tokyonight.nvim が terminal_colors = true で制御
+	-- foreground = "#b9c0cb",
+	-- background = "#282c34",
+	-- ansi = { ... },
+	-- brights = { ... },
+	
+	-- タブバーのみカスタマイズ（Tokyo Night Night風）
 	tab_bar = {
+		background = "#1a1b26",
 		active_tab = {
-			bg_color = title_color_bg:lighten(0.03),
-			fg_color = title_color_fg:lighten(0.8),
+			bg_color = "#7aa2f7",
+			fg_color = "#1a1b26",
 			intensity = "Bold",
 		},
 		inactive_tab = {
-			bg_color = title_color_bg:lighten(0.01),
-			fg_color = title_color_fg,
+			bg_color = "#292e42",
+			fg_color = "#545c7e",
 			intensity = "Half",
 		},
-		inactive_tab_edge = title_color_bg,
+		inactive_tab_hover = {
+			bg_color = "#3b4261",
+			fg_color = "#7aa2f7",
+		},
+		new_tab = {
+			bg_color = "#1a1b26",
+			fg_color = "#7aa2f7",
+		},
+		new_tab_hover = {
+			bg_color = "#3b4261",
+			fg_color = "#7aa2f7",
+		},
 	},
-	split = title_color_bg:lighten(0.3):desaturate(0.5),
+	-- ペイン分割線の色
+	split = "#3b4261",
 }
+
+-- 代替設定: 独自のカラーパレットを使用する場合
+-- （Neovimで transparent = true, terminal_colors = false に設定）
+--[[
+config.colors = {
+	foreground = "#c0caf5",
+	background = "#1a1b26",
+	cursor_bg = "#c0caf5",
+	cursor_fg = "#1a1b26",
+	cursor_border = "#c0caf5",
+	selection_bg = "#283457",
+	selection_fg = "#c0caf5",
+	
+	-- Tokyo Night Night カラー
+	ansi = {
+		"#15161e", -- black
+		"#f7768e", -- red
+		"#9ece6a", -- green
+		"#e0af68", -- yellow
+		"#7aa2f7", -- blue
+		"#bb9af7", -- magenta
+		"#7dcfff", -- cyan
+		"#a9b1d6", -- white
+	},
+	brights = {
+		"#414868", -- bright black
+		"#f7768e", -- bright red
+		"#9ece6a", -- bright green
+		"#e0af68", -- bright yellow
+		"#7aa2f7", -- bright blue
+		"#bb9af7", -- bright magenta
+		"#7dcfff", -- bright cyan
+		"#c0caf5", -- bright white
+	},
+	
+	tab_bar = {
+		background = "#1a1b26",
+		active_tab = {
+			bg_color = "#7aa2f7",
+			fg_color = "#1a1b26",
+			intensity = "Bold",
+		},
+		inactive_tab = {
+			bg_color = "#292e42",
+			fg_color = "#545c7e",
+			intensity = "Half",
+		},
+	},
+}
+--]]
 
 -- Window frame colors (must be set after color theme is initialized)
 config.window_frame = {
@@ -182,19 +248,15 @@ config.window_frame = {
 --   詳細: docs/guides/font-installation.md
 -- フォント設定（エラーを避けるため、確実に存在するフォントを使用）
 config.font = wezterm.font_with_fallback({
-	-- macOS標準フォント（確実に存在）
-	"Menlo",
-	"Monaco",
-	-- 追加のフォールバック
-	{ family = "JetBrains Mono", weight = "Regular" },
-	{ family = "Courier New", weight = "Regular" },
-	{ family = "DejaVu Sans Mono", weight = "Regular" },
-	-- Moralerspace variants (インストール後にコメントを外してください)
-	{ family = "Moralerspace Neon", weight = "Regular" },
-	{ family = "Moralerspace Argon", weight = "Regular" },
-	{ family = "Moralerspace Xenon", weight = "Regular" },
-	{ family = "Moralerspace Radon", weight = "Regular" },
-	{ family = "Moralerspace Krypton", weight = "Regular" },
+	-- $HOME/Library/Fonts/JetBrainsMono[wght].ttf index=0 variation=4, CoreText
+	"JetBrains Mono",
+  
+	-- <built-in>, BuiltIn
+	-- Assumed to have Emoji Presentation
+	"Noto Color Emoji",
+  
+	-- <built-in>, BuiltIn
+	"Symbols Nerd Font Mono",  
 })
 
 -- Font features (ligatures)
@@ -202,14 +264,17 @@ config.harfbuzz_features = { "calt=1", "clig=1", "liga=1" }
 
 -- OS-specific font size and window size
 if os == "macOS" or os == "linux" then
-	config.font_size = 12
+	config.font_size = 13
 	config.initial_cols = 480
 	config.initial_rows = 240
 elseif os == "windows" then
-	config.font_size = 12
+	config.font_size = 13
 	config.initial_cols = 140
 	config.initial_rows = 60
 end
+
+-- IME support
+config.use_ime = true
 
 -- ========================================
 -- Tab Bar
@@ -563,13 +628,51 @@ end
 -- Key Bindings
 -- ========================================
 
+-- OS別のモディファイアキー設定
+-- macOS: Command, Windows/Linux: Ctrl
+local tab_mod = os == "macOS" and "CMD" or "CTRL"
+local tab_mod_shift = os == "macOS" and "CMD|SHIFT" or "CTRL|SHIFT"
+
 config.leader = { key = "Space", mods = "CTRL", timeout_milliseconds = 1000 }
 config.keys = {
+	-- ========================================
+	-- Tab management (macOS: Cmd, Windows/Linux: Ctrl)
+	-- ========================================
+	
+	-- 新規タブ
+	{ key = "t", mods = tab_mod, action = wezterm.action.SpawnTab("CurrentPaneDomain") },
+	
+	-- タブを閉じる
+	{ key = "w", mods = tab_mod, action = wezterm.action.CloseCurrentTab({ confirm = true }) },
+	
+	-- タブ切り替え（数字）
+	{ key = "1", mods = tab_mod, action = wezterm.action.ActivateTab(0) },
+	{ key = "2", mods = tab_mod, action = wezterm.action.ActivateTab(1) },
+	{ key = "3", mods = tab_mod, action = wezterm.action.ActivateTab(2) },
+	{ key = "4", mods = tab_mod, action = wezterm.action.ActivateTab(3) },
+	{ key = "5", mods = tab_mod, action = wezterm.action.ActivateTab(4) },
+	{ key = "6", mods = tab_mod, action = wezterm.action.ActivateTab(5) },
+	{ key = "7", mods = tab_mod, action = wezterm.action.ActivateTab(6) },
+	{ key = "8", mods = tab_mod, action = wezterm.action.ActivateTab(7) },
+	{ key = "9", mods = tab_mod, action = wezterm.action.ActivateTab(-1) },
+	
+	-- タブ移動
+	{ key = "Tab", mods = tab_mod, action = wezterm.action.ActivateTabRelative(1) },
+	{ key = "Tab", mods = tab_mod_shift, action = wezterm.action.ActivateTabRelative(-1) },
+	
+	-- タブの順序変更
+	{ key = "{", mods = "SHIFT|ALT", action = wezterm.action.MoveTabRelative(-1) },
+	{ key = "}", mods = "SHIFT|ALT", action = wezterm.action.MoveTabRelative(1) },
+	
+	-- ========================================
 	-- Window
+	-- ========================================
 	{ key = "n", mods = "SHIFT|CTRL", action = wezterm.action.ToggleFullScreen },
 	{ key = "Enter", mods = "ALT", action = wezterm.action.DisableDefaultAssignment },
 
+	-- ========================================
 	-- Pane management
+	-- ========================================
 	{ key = "s", mods = "LEADER", action = wezterm.action.SplitVertical({ domain = "CurrentPaneDomain" }) },
 	{ key = "v", mods = "LEADER", action = wezterm.action.SplitHorizontal({ domain = "CurrentPaneDomain" }) },
 	{ key = "q", mods = "LEADER", action = wezterm.action.CloseCurrentPane({ confirm = true }) },
@@ -579,7 +682,9 @@ config.keys = {
 	{ key = "l", mods = "LEADER", action = wezterm.action.ActivatePaneDirection("Right") },
 	{ key = "w", mods = "LEADER", action = wezterm.action_callback(create_auto_split_layout) },
 
+	-- ========================================
 	-- Copy mode and scrolling
+	-- ========================================
 	{ key = "c", mods = "LEADER", action = wezterm.action.ActivateCopyMode },
 	{ key = "c", mods = "SHIFT|CTRL", action = wezterm.action({ CopyTo = "Clipboard" }) },
 	{ key = "u", mods = "SHIFT|CTRL", action = wezterm.action.ScrollByPage(-0.5) },
@@ -587,27 +692,46 @@ config.keys = {
 	{ key = "g", mods = "SHIFT|CTRL", action = wezterm.action.ScrollToBottom },
 	{ key = "Q", mods = "SHIFT|CTRL", action = wezterm.action.SendString("\x1b[81;6u") },
 
-	-- Tab management
-	{ key = "{", mods = "SHIFT|ALT", action = wezterm.action.MoveTabRelative(-1) },
-	{ key = "}", mods = "SHIFT|ALT", action = wezterm.action.MoveTabRelative(1) },
-
+	-- ========================================
 	-- Copy and paste
+	-- ========================================
 	{ key = "C", mods = "CTRL|SHIFT", action = wezterm.action.CopyTo("ClipboardAndPrimarySelection") },
 	{ key = "V", mods = "CTRL|SHIFT", action = wezterm.action.PasteFrom("Clipboard") },
 
+	-- ========================================
 	-- Vim-like navigation in insert mode
+	-- ========================================
 	{ key = "h", mods = "CTRL", action = wezterm.action.SendKey({ key = "LeftArrow" }) },
 	{ key = "j", mods = "CTRL", action = wezterm.action.SendKey({ key = "DownArrow" }) },
 	{ key = "k", mods = "CTRL", action = wezterm.action.SendKey({ key = "UpArrow" }) },
 	{ key = "l", mods = "CTRL", action = wezterm.action.SendKey({ key = "RightArrow" }) },
 
-	-- Font size
+	-- ========================================
+	-- Font size (macOS: Cmd, Windows/Linux: Ctrl)
+	-- ========================================
+	{ key = "+", mods = tab_mod, action = "IncreaseFontSize" },
+	{ key = "=", mods = tab_mod, action = "IncreaseFontSize" }, -- Shift不要版
+	{ key = "-", mods = tab_mod, action = "DecreaseFontSize" },
+	{ key = "0", mods = tab_mod, action = "ResetFontSize" },
+	
+	-- 従来のキーバインドも残す（互換性）
 	{ key = "+", mods = "CTRL|SHIFT", action = "IncreaseFontSize" },
 	{ key = "_", mods = "CTRL|SHIFT", action = "DecreaseFontSize" },
 	{ key = "Backspace", mods = "CTRL|SHIFT", action = "ResetFontSize" },
 
-	-- Reload configuration
+	-- ========================================
+	-- その他
+	-- ========================================
+	
+	-- 設定リロード
 	{ key = "F5", action = "ReloadConfiguration" },
+	{ key = "r", mods = tab_mod_shift, action = wezterm.action.ReloadConfiguration },
+	
+	-- コマンドパレット
+	{ key = "p", mods = tab_mod_shift, action = wezterm.action.ActivateCommandPalette },
+	
+	-- 検索
+	{ key = "f", mods = tab_mod, action = wezterm.action.Search("CurrentSelectionOrEmptyString") },
 }
 
 -- ========================================

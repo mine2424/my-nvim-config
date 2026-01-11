@@ -36,7 +36,7 @@ dotfilesの設定を適用し、必要なツールをインストールします
 
 コンポーネント:
   --all              すべての設定を適用（デフォルト）
-  --nvim             AstroNvim設定のみ
+  --nvim             Neovim設定のみ
   --shell            シェル設定のみ（Zsh + Starship）
   --terminal         ターミナル設定のみ（WezTerm）
   --cli              CLIツール設定のみ（Git, tmux等）
@@ -321,10 +321,10 @@ install_dependencies_arch() {
 }
 
 #######################################
-# AstroNvim設定を適用
+# Neovim設定を適用
 #######################################
 setup_nvim() {
-    log_section "AstroNvim設定の適用"
+    log_section "Neovim設定の適用"
     
     local dotfiles_root
     dotfiles_root="$(get_dotfiles_root)"
@@ -464,13 +464,13 @@ confirm_setup() {
     
     case "$COMPONENT" in
         all)
-            echo "  - AstroNvim設定"
+            echo "  - Neovim設定"
             echo "  - シェル設定（Zsh + Starship）"
             echo "  - ターミナル設定（WezTerm）"
             echo "  - CLIツール設定（Git, tmux等）"
             ;;
         nvim)
-            echo "  - AstroNvim設定"
+            echo "  - Neovim設定"
             ;;
         shell)
             echo "  - シェル設定（Zsh + Starship）"

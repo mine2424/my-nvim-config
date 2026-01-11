@@ -1,0 +1,233 @@
+#!/bin/bash
+
+# ========================================
+# Neovim + Tmux クイック起動スクリプト
+# ========================================
+# 使用例:
+#   dev                    # カレントディレクトリで起動
+#   dev ~/project          # 指定ディレクトリで起動
+#   dev myproject ~/code   # セッション名とディレクトリ指定
+#   dev --layout split     # 分割レイアウト
+#   dev --layout full      # フルスクリーンレイアウト
+#   dev --layout claude    # Claude Code併用レイアウト
+
+set -e
+
+# ========================================
+# 設定
+# ========================================
+
+DEFAULT_LAYOUT="claude"  # split, full, claude
+SESSION_PREFIX="dev"
+
+# ========================================
+# ヘルプ表示
+# ========================================
+
+show_help() {
+  cat << EOF
+Usage: dev [OPTIONS] [SESSION_NAME] [PROJECT_DIR]
+
+Neovim + Tmux開発環境を起動します。
+
+Arguments:
+  SESSION_NAME    セッション名（省略時: カレントディレクトリ名）
+  PROJECT_DIR     プロジェクトディレクトリ（省略時: カレントディレクトリ）
+
+Options:
+  -l, --layout LAYOUT    レイアウト選択 (split|full|claude)
+                         claude: Claude Code併用レイアウト（デフォルト）
+                         split:  エディタ + ターミナル分割
+                         full:   エディタフルスクリーン
+  -h, --help            このヘルプを表示
+
+Layouts:
+  split:   ┌─────────────────┐
+           │ Neovim (70%)    │
+           ├─────────────────┤
+           │ Terminal (30%)  │
+           └─────────────────┘
+
+  full:    ┌─────────────────┐
+           │                 │
+           │ Neovim (100%)   │
+           │                 │
+           └─────────────────┘
+
+  claude:  ┌──────────┬──────┐
+           │          │ Git  │
+           │ Neovim   ├──────┤
+           │ (60%)    │ Term │
+           └──────────┴──────┘
+           ※ Claude Codeは別ウィンドウで使用
+
+Examples:
+  dev                           # カレントディレクトリで起動
+  dev myproject                 # myprojectセッションで起動
+  dev myproject ~/code/myapp    # 指定ディレクトリで起動
+  dev --layout claude           # Claude併用レイアウト
+  dev -l full myproject         # フルスクリーンレイアウト
+
+EOF
+}
+
+# ========================================
+# 引数解析
+# ========================================
+
+LAYOUT="$DEFAULT_LAYOUT"
+SESSION_NAME=""
+PROJECT_DIR=""
+
+while [[ $# -gt 0 ]]; do
+  case $1 in
+    -l|--layout)
+      LAYOUT="$2"
+      shift 2
+      ;;
+    -h|--help)
+      show_help
+      exit 0
+      ;;
+    *)
+      if [ -z "$SESSION_NAME" ]; then
+        SESSION_NAME="$1"
+      elif [ -z "$PROJECT_DIR" ]; then
+        PROJECT_DIR="$1"
+      fi
+      shift
+      ;;
+  esac
+done
+
+# ========================================
+# デフォルト値設定
+# ========================================
+
+# プロジェクトディレクトリのデフォルト
+if [ -z "$PROJECT_DIR" ]; then
+  PROJECT_DIR="$(pwd)"
+fi
+
+# セッション名のデフォルト（ディレクトリ名から生成）
+if [ -z "$SESSION_NAME" ]; then
+  SESSION_NAME="${SESSION_PREFIX}-$(basename "$PROJECT_DIR")"
+fi
+
+# ディレクトリの存在確認
+if [ ! -d "$PROJECT_DIR" ]; then
+  echo "Error: Directory not found: $PROJECT_DIR"
+  exit 1
+fi
+
+# レイアウトの検証
+if [[ ! "$LAYOUT" =~ ^(split|full|claude)$ ]]; then
+  echo "Error: Invalid layout: $LAYOUT"
+  echo "Valid layouts: split, full, claude"
+  exit 1
+fi
+
+# ========================================
+# セッション作成関数
+# ========================================
+
+create_split_layout() {
+  local session=$1
+  local dir=$2
+  
+  # メインウィンドウ: editor
+  tmux new-session -d -s "$session" -n "editor" -c "$dir"
+  tmux send-keys -t "$session:editor" "nvim" C-m
+  
+  # エディタペインを分割（下30%にターミナル）
+  tmux split-window -t "$session:editor" -v -p 30 -c "$dir"
+  
+  # エディタペインにフォーカス
+  tmux select-pane -t "$session:editor.0"
+}
+
+create_full_layout() {
+  local session=$1
+  local dir=$2
+  
+  # メインウィンドウ: editor（フルスクリーン）
+  tmux new-session -d -s "$session" -n "editor" -c "$dir"
+  tmux send-keys -t "$session:editor" "nvim" C-m
+  
+  # 別ウィンドウ: terminal
+  tmux new-window -t "$session" -n "terminal" -c "$dir"
+  
+  # エディタウィンドウに戻る
+  tmux select-window -t "$session:editor"
+}
+
+create_claude_layout() {
+  local session=$1
+  local dir=$2
+  
+  # メインウィンドウ: editor
+  tmux new-session -d -s "$session" -n "editor" -c "$dir"
+  tmux send-keys -t "$session:editor" "nvim" C-m
+  
+  # 右側に縦分割（40%）
+  tmux split-window -t "$session:editor" -h -p 40 -c "$dir"
+  
+  # 右ペインを横分割（上50%: git、下50%: terminal）
+  tmux split-window -t "$session:editor.1" -v -p 50 -c "$dir"
+  tmux send-keys -t "$session:editor.1" "git status" C-m
+  
+  # エディタペインにフォーカス
+  tmux select-pane -t "$session:editor.0"
+  
+  echo ""
+  echo "💡 Claude Code併用レイアウト作成完了"
+  echo "   - 左: Neovim (60%)"
+  echo "   - 右上: Git (20%)"
+  echo "   - 右下: Terminal (20%)"
+  echo ""
+  echo "   Claude Codeは別ウィンドウで開いてください"
+  echo "   推奨: WezTermの別タブまたはOSのウィンドウ分割機能を使用"
+}
+
+# ========================================
+# メイン処理
+# ========================================
+
+# 既存セッションの確認
+if tmux has-session -t "$SESSION_NAME" 2>/dev/null; then
+  echo "📌 セッション '$SESSION_NAME' は既に存在します"
+  echo "   アタッチしています..."
+  
+  # Tmux内から実行された場合
+  if [ -n "$TMUX" ]; then
+    tmux switch-client -t "$SESSION_NAME"
+  else
+    tmux attach-session -t "$SESSION_NAME"
+  fi
+  exit 0
+fi
+
+# 新規セッション作成
+echo "🚀 セッション '$SESSION_NAME' を作成中..."
+echo "   ディレクトリ: $PROJECT_DIR"
+echo "   レイアウト: $LAYOUT"
+echo ""
+
+case "$LAYOUT" in
+  split)
+    create_split_layout "$SESSION_NAME" "$PROJECT_DIR"
+    ;;
+  full)
+    create_full_layout "$SESSION_NAME" "$PROJECT_DIR"
+    ;;
+  claude)
+    create_claude_layout "$SESSION_NAME" "$PROJECT_DIR"
+    ;;
+esac
+
+# セッションにアタッチ
+if [ -n "$TMUX" ]; then
+  tmux switch-client -t "$SESSION_NAME"
+else
+  tmux attach-session -t "$SESSION_NAME"
+fi

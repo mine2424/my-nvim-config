@@ -1,0 +1,255 @@
+-- ========================================
+-- Language-Specific Plugins
+-- ========================================
+
+return {
+  -- ========================================
+  -- TypeScript/JavaScript
+  -- ========================================
+  
+  {
+    "pmizio/typescript-tools.nvim",
+    dependencies = { "nvim-lua/plenary.nvim", "neovim/nvim-lspconfig" },
+    ft = { "javascript", "javascriptreact", "typescript", "typescriptreact" },
+    opts = {
+      settings = {
+        separate_diagnostic_server = true,
+        publish_diagnostic_on = "insert_leave",
+        expose_as_code_action = {},
+        tsserver_path = nil,
+        tsserver_plugins = {},
+        tsserver_max_memory = "auto",
+        tsserver_format_options = {},
+        tsserver_file_preferences = {
+          includeInlayParameterNameHints = "all",
+          includeInlayFunctionParameterTypeHints = true,
+        },
+      },
+    },
+  },
+
+  -- ========================================
+  -- Dart/Flutter
+  -- ========================================
+  
+  {
+    "akinsho/flutter-tools.nvim",
+    ft = "dart",
+    dependencies = {
+      "nvim-lua/plenary.nvim",
+      "stevearc/dressing.nvim",
+    },
+    opts = {
+      ui = {
+        border = "rounded",
+      },
+      decorations = {
+        statusline = {
+          app_version = true,
+          device = true,
+        },
+      },
+      debugger = {
+        enabled = true,
+        run_via_dap = true,
+      },
+      flutter_path = nil,  -- Auto-detect
+      flutter_lookup_cmd = nil,
+      fvm = false,
+      widget_guides = {
+        enabled = true,
+      },
+      closing_tags = {
+        highlight = "Comment",
+        prefix = "// ",
+        enabled = true,
+      },
+      dev_log = {
+        enabled = true,
+        open_cmd = "tabedit",
+      },
+      lsp = {
+        color = {
+          enabled = true,
+          background = false,
+          foreground = false,
+          virtual_text = true,
+          virtual_text_str = "■",
+        },
+        settings = {
+          showTodos = true,
+          completeFunctionCalls = true,
+          enableSnippets = true,
+          updateImportsOnRename = true,
+        },
+      },
+    },
+    keys = {
+      { "<leader>Fc", "<cmd>FlutterRun<cr>", desc = "Flutter Run" },
+      { "<leader>Fq", "<cmd>FlutterQuit<cr>", desc = "Flutter Quit" },
+      { "<leader>Fr", "<cmd>FlutterReload<cr>", desc = "Flutter Reload" },
+      { "<leader>FR", "<cmd>FlutterRestart<cr>", desc = "Flutter Restart" },
+      { "<leader>Fd", "<cmd>FlutterDevices<cr>", desc = "Flutter Devices" },
+      { "<leader>Fe", "<cmd>FlutterEmulators<cr>", desc = "Flutter Emulators" },
+      { "<leader>Fo", "<cmd>FlutterOutlineToggle<cr>", desc = "Flutter Outline" },
+    },
+  },
+
+  -- ========================================
+  -- Rust
+  -- ========================================
+  
+  {
+    "simrat39/rust-tools.nvim",
+    ft = "rust",
+    dependencies = {
+      "neovim/nvim-lspconfig",
+    },
+    opts = {
+      server = {
+        on_attach = function(_, bufnr)
+          -- Hover actions
+          vim.keymap.set("n", "<C-space>", require("rust-tools").hover_actions.hover_actions, {
+            buffer = bufnr,
+            desc = "Rust hover actions",
+          })
+          
+          -- Code action groups
+          vim.keymap.set("n", "<leader>ca", require("rust-tools").code_action_group.code_action_group, {
+            buffer = bufnr,
+            desc = "Rust code action group",
+          })
+        end,
+        settings = {
+          ["rust-analyzer"] = {
+            cargo = {
+              allFeatures = true,
+            },
+            checkOnSave = {
+              command = "clippy",
+            },
+          },
+        },
+      },
+      tools = {
+        hover_actions = {
+          auto_focus = true,
+        },
+        inlay_hints = {
+          auto = true,
+          show_parameter_hints = true,
+        },
+      },
+    },
+  },
+
+  -- Cargo.toml support
+  {
+    "saecki/crates.nvim",
+    event = { "BufRead Cargo.toml" },
+    dependencies = { "nvim-lua/plenary.nvim" },
+    opts = {
+      src = {
+        cmp = {
+          enabled = true,
+        },
+      },
+    },
+  },
+
+  -- ========================================
+  -- Go
+  -- ========================================
+  
+  {
+    "ray-x/go.nvim",
+    dependencies = {
+      "ray-x/guihua.lua",
+      "neovim/nvim-lspconfig",
+      "nvim-treesitter/nvim-treesitter",
+    },
+    ft = { "go", "gomod" },
+    build = ':lua require("go.install").update_all_sync()',
+    opts = {
+      disable_defaults = false,
+      go = "go",
+      goimport = "gopls",
+      fillstruct = "gopls",
+      gofmt = "gofumpt",
+      max_line_len = 120,
+      tag_transform = false,
+      test_template = "",
+      test_template_dir = "",
+      comment_placeholder = "",
+      lsp_cfg = true,
+      lsp_gofumpt = true,
+      lsp_on_attach = true,
+      dap_debug = true,
+    },
+    keys = {
+      { "<leader>Gr", "<cmd>GoRun<cr>", desc = "Go Run" },
+      { "<leader>Gt", "<cmd>GoTest<cr>", desc = "Go Test" },
+      { "<leader>Gc", "<cmd>GoCoverage<cr>", desc = "Go Coverage" },
+      { "<leader>Gf", "<cmd>GoFmt<cr>", desc = "Go Format" },
+      { "<leader>Gi", "<cmd>GoImport<cr>", desc = "Go Import" },
+    },
+  },
+
+  -- ========================================
+  -- Python
+  -- ========================================
+  
+  {
+    "linux-cultist/venv-selector.nvim",
+    ft = "python",
+    dependencies = {
+      "neovim/nvim-lspconfig",
+      "nvim-telescope/telescope.nvim",
+    },
+    opts = {
+      name = { "venv", ".venv", "env", ".env" },
+      auto_refresh = true,
+    },
+    keys = {
+      { "<leader>vs", "<cmd>VenvSelect<cr>", desc = "Select VirtualEnv" },
+      { "<leader>vc", "<cmd>VenvSelectCached<cr>", desc = "Select Cached VirtualEnv" },
+    },
+  },
+
+  -- ========================================
+  -- Java
+  -- ========================================
+  
+  {
+    "mfussenegger/nvim-jdtls",
+    ft = "java",
+    dependencies = {
+      "mfussenegger/nvim-dap",
+    },
+  },
+
+  -- ========================================
+  -- Ruby
+  -- ========================================
+  
+  {
+    "tpope/vim-rails",
+    ft = { "ruby", "eruby" },
+  },
+
+  -- ========================================
+  -- Markdown
+  -- ========================================
+  
+  {
+    "iamcco/markdown-preview.nvim",
+    cmd = { "MarkdownPreviewToggle", "MarkdownPreview", "MarkdownPreviewStop" },
+    ft = { "markdown" },
+    build = function()
+      vim.fn["mkdp#util#install"]()
+    end,
+    keys = {
+      { "<leader>mp", "<cmd>MarkdownPreviewToggle<cr>", desc = "Markdown Preview" },
+    },
+  },
+}

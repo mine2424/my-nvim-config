@@ -100,7 +100,7 @@ config.font = wezterm.font_with_fallback({
 
 ### Neovim
 
-Neovimはターミナルのフォント設定を使用します。GUIバージョン（Neovide等）を使用する場合は、`nvim/lua/plugins/astroui.lua`で設定できます。
+Neovimはターミナルのフォント設定を使用します。GUIバージョン（Neovide等）を使用する場合は、`nvim/.config/nvim/lua/plugins/ui.lua`で設定できます。
 
 ## インストール確認
 

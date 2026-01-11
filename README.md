@@ -2,12 +2,13 @@
 
 <div align="center">
 
-**🚀 クロスプラットフォーム対応の統一開発環境**
+**🚀 Neovim + Tmux + Claude Code 並列開発環境**
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Platform](https://img.shields.io/badge/Platform-macOS%20%7C%20Linux%20%7C%20Windows-lightgrey)]()
 
-開発環境の設定ファイル集（dotfiles）。モダンで快適な開発環境を数分でセットアップ。
+モダンで快適な開発環境を数分でセットアップ。  
+15言語対応、統合ナビゲーション、AI開発との完璧な併用。
 
 [クイックスタート](#-クイックスタート) • [機能](#-主な機能) • [ドキュメント](#-ドキュメント)
 
@@ -17,88 +18,102 @@
 
 ## 🎯 概要
 
-このdotfilesプロジェクトは、以下の環境を統一的にセットアップします：
+このdotfilesプロジェクトは、Neovim + Tmux + Claude Codeを統合した並列開発環境を提供します。
 
 | カテゴリ | ツール | 説明 |
 |---------|--------|------|
-| **エディタ** | [AstroNvim](https://astronvim.com/) | モダンなNeovim設定（LSP、フォーマッター、プラグイン） |
+| **エディタ** | [Neovim](https://neovim.io/) + [lazy.nvim](https://github.com/folke/lazy.nvim) | モダンなNeovim設定（LSP、15言語対応） |
+| **マルチプレクサ** | [Tmux](https://github.com/tmux/tmux) | セッション管理、ペイン分割 |
+| **ターミナル** | [WezTerm](https://wezfurlong.org/wezterm/) | GPU加速、統合ナビゲーション |
+| **AI開発** | [Cursor](https://cursor.sh/) | Claude Code併用ワークフロー |
 | **シェル** | [Zsh](https://www.zsh.org/) + [Starship](https://starship.rs/) | 高速で美しいシェル環境 |
-| **ターミナル** | [WezTerm](https://wezfurlong.org/wezterm/) | GPU加速ターミナルエミュレータ |
 | **フォント** | [Moralerspace](https://github.com/yuru7/moralerspace) | プログラミング向け日英混植フォント |
-| **AI統合** | [Cursor](https://cursor.sh/) | AI統合エディタ設定 |
-| **CLIツール** | Git, tmux, fzf, etc. | 開発効率を上げる各種ツール |
 
 ## ✨ 主な機能
 
+### 🔄 統合ナビゲーション
+- **`Ctrl+h/j/k/l`**: WezTerm → Tmux → Neovim間をシームレスに移動
+- **vim-tmux-navigator**: 完全統合
+- **一貫したキーバインディング**: 全レイヤーで統一
+
+### 🌐 15言語サポート
+- **Web**: JavaScript, TypeScript, React, Next.js, HTML, CSS
+- **モバイル**: Dart, Flutter, Kotlin, Java, Swift
+- **システム**: Rust, Go, C/C++
+- **スクリプト**: Python, Ruby
+- **その他**: Lua, Bash, JSON, YAML, Markdown
+
 ### 🎨 美しいUI/UX
-- **Moralerspaceフォント**: Monaspace（欧文）+ IBM Plex Sans JP（和文）の合成フォント
-- **Tokyo Nightテーマ**: 統一感のあるカラースキーム
-- **Starshipプロンプト**: Git統合、言語バージョン表示、カスタムシンボル
+- **Tokyo Night Night**: 3レイヤー統一カラースキーム
+- **Neovim優先モード**: ターミナル色をNeovimが制御
+- **透過設定**: WezTermの透過度とブラー効果
 
 ### ⚡ 高速な開発環境
-- **GPU加速ターミナル**: WezTermで120 FPS
-- **遅延読み込み**: Sheldonによる高速シェル起動
-- **LSP統合**: TypeScript、Rust、Go、Python等の言語サポート
+- **lazy.nvim**: 遅延読み込みで高速起動
+- **LSP統合**: 15言語のコード補完・診断
+- **自動フォーマット**: 保存時に自動フォーマット
+- **Linter統合**: リアルタイムコード検証
 
-### 🔄 簡単な管理
-- **双方向同期**: `sync.sh`でdotfiles ⇔ ローカルPC間を同期
-- **自動バックアップ**: クリーニング前に自動バックアップ
-- **ドライランモード**: 安全に変更内容を確認
+### 🤖 Claude Code併用
+- **明確な使い分け**: Neovim（設定・スクリプト）、Claude Code（新機能開発）
+- **最適化レイアウト**: Git + Terminal統合
+- **devコマンド**: 一発起動
 
-### 🌍 クロスプラットフォーム
-- **macOS**: Apple Silicon / Intel対応
-- **Linux**: Ubuntu、Debian、Arch等
-- **Windows**: WSL2推奨
+### 🔧 簡単な管理
+- **自動セットアップ**: ワンコマンドでインストール
+- **設定同期**: dotfiles ⇔ ローカルPC間を双方向同期
+- **自動リロード**: 設定変更を即座に反映
 
 ## 📁 プロジェクト構造
 
 ```
 dotfiles/
-├── docs/                           # 📚 ドキュメント
-│   ├── requirements/               # 要件定義
-│   ├── guides/                     # ガイド（フォント、セットアップ等）
-│   └── implementation-plan.md      # 実装計画
-├── scripts/                        # 🔧 セットアップスクリプト
-│   ├── setup.sh                    # メインセットアップ
-│   ├── sync.sh                     # 双方向同期
-│   ├── clean.sh                    # クリーニング
-│   ├── restore.sh                  # 復元
-│   ├── verify-setup.sh             # 検証
-│   └── utils/                      # ユーティリティ関数
-│       ├── common.sh               # 共通関数
-│       ├── os-detect.sh            # OS検出
-│       ├── logger.sh               # ログ機能
-│       └── backup.sh               # バックアップ機能
-├── nvim/                           # 📝 AstroNvim設定
-│   ├── init.lua                    # エントリーポイント
+├── docs/                                    # 📚 ドキュメント
+│   ├── requirements/
+│   │   └── neovim-tmux-claude-parallel-dev.md  # 要件定義（3,700行）
+│   ├── keybindings.md                       # キーバインドガイド（1,000行）
+│   ├── colorscheme-integration.md           # カラースキーム統合
+│   ├── setup-guide-neovim-tmux.md           # セットアップガイド
+│   └── implementation-summary.md            # 実装サマリー
+├── scripts/                                 # 🔧 セットアップスクリプト
+│   ├── install-neovim-tmux.sh               # Neovim + Tmux自動セットアップ
+│   ├── dev                                  # クイック起動コマンド
+│   ├── sync.sh                              # 双方向同期
+│   ├── clean.sh                             # クリーニング
+│   └── restore.sh                           # 復元
+├── nvim/.config/nvim/                       # 📝 Neovim設定
+│   ├── init.lua                             # エントリーポイント
 │   └── lua/
-│       ├── community.lua           # コミュニティプラグイン
-│       └── plugins/                # プラグイン設定
-│           ├── astrocore.lua       # コア設定
-│           ├── astrolsp.lua        # LSP設定
-│           ├── astroui.lua         # UI設定
-│           └── user.lua            # カスタムプラグイン
-├── zsh/                            # 🐚 Zsh設定
-│   ├── zshrc                       # メイン設定
-│   ├── zshenv                      # 環境変数
-│   ├── zprofile                    # PATH設定
-│   └── sheldon/                    # プラグイン管理
-│       └── plugins.toml            # プラグイン定義
-├── wezterm/                        # 🖥️ WezTerm設定
-│   └── .config/wezterm/
-│       └── wezterm.lua             # ターミナル設定
-├── starship/                       # ⭐ Starship設定
-│   └── .config/
-│       └── starship.toml           # プロンプト設定
-├── npm/                            # 📦 npm設定
-│   ├── npmrc                       # プロジェクト設定
-│   └── .config/npm/
-│       └── npmrc                   # グローバル設定
-├── cursor/                         # 🤖 Cursor設定（予定）
-├── cli-tools/                      # 🛠️ CLIツール設定（予定）
-├── apps/                           # 📱 アプリケーション設定（予定）
-├── backups/                        # 💾 バックアップ（Git管理外）
-└── README.md                       # このファイル
+│       ├── config/                          # 基本設定
+│       │   ├── options.lua                  # Neovimオプション
+│       │   ├── lazy.lua                     # lazy.nvimブートストラップ
+│       │   ├── keymaps.lua                  # キーマッピング
+│       │   └── autocmds.lua                 # 自動コマンド
+│       └── plugins/                         # プラグイン設定（11ファイル）
+│           ├── colorscheme.lua              # Tokyo Night Night
+│           ├── treesitter.lua               # シンタックスハイライト
+│           ├── lsp.lua                      # LSP設定（15言語）
+│           ├── completion.lua               # 補完（nvim-cmp）
+│           ├── telescope.lua                # ファジーファインダー
+│           ├── git.lua                      # Git統合
+│           ├── ui.lua                       # UI拡張
+│           ├── editor.lua                   # エディター拡張
+│           ├── languages.lua                # 言語別プラグイン
+│           ├── formatter.lua                # フォーマッター
+│           └── linter.lua                   # Linter
+├── tmux/                                    # 🖥️ Tmux設定
+│   └── .tmux.conf                           # Tokyo Night、vim-tmux-navigator統合
+├── wezterm/.config/wezterm/                 # 🖥️ WezTerm設定
+│   └── wezterm.lua                          # OS別キーバインド、カラー統合
+├── zsh/                                     # 🐚 Zsh設定
+│   ├── zshrc                                # メイン設定
+│   ├── zshenv                               # 環境変数
+│   ├── zprofile                             # PATH設定
+│   └── sheldon/plugins.toml                 # プラグイン管理
+├── starship/.config/                        # ⭐ Starship設定
+│   └── starship.toml                        # プロンプト設定
+└── npm/                                     # 📦 npm設定
+    └── npmrc                                # npm設定
 ```
 
 ## 🚀 クイックスタート
@@ -110,60 +125,143 @@ dotfiles/
 | ✅ | Git | バージョン管理 |
 | ✅ | Bash/Zsh | シェル |
 | ✅ | インターネット接続 | パッケージダウンロード |
-| 推奨 | [Moralerspace](https://github.com/yuru7/moralerspace) | プログラミングフォント |
-
-#### フォントのインストール（推奨）
-
-```bash
-# macOS
-brew install --cask font-monaspice-nerd-font
-brew install --cask font-moralerspace
-
-# Linux (Ubuntu/Debian)
-mkdir -p ~/.local/share/fonts
-cd ~/.local/share/fonts
-wget https://github.com/yuru7/moralerspace/releases/latest/download/Moralerspace_v2.0.0.zip
-unzip Moralerspace_v2.0.0.zip && rm Moralerspace_v2.0.0.zip
-fc-cache -fv
-
-# 詳細は docs/guides/font-installation.md を参照
-```
+| 推奨 | [Nerd Font](https://www.nerdfonts.com/) | アイコン表示（JetBrains Mono推奨） |
+| 推奨 | [WezTerm](https://wezfurlong.org/wezterm/) | ターミナルエミュレータ |
 
 ### インストール
 
 ```bash
 # 1. リポジトリをクローン
-git clone https://github.com/your-repo/dotfiles.git ~/dotfiles
-cd ~/dotfiles
+git clone https://github.com/your-repo/dotfiles.git ~/development/dotfiles
+cd ~/development/dotfiles
 
-# 2. フルセットアップ（推奨）
-./scripts/setup.sh --all --install
+# 2. Neovim + Tmux自動セットアップ（推奨）
+./scripts/install-neovim-tmux.sh
 
-# または、設定ファイルのみ適用（依存関係は手動インストール）
-./scripts/setup.sh --all
-
-# 3. セットアップの検証
-./scripts/verify-setup.sh
-
-# 4. シェルを再起動
+# 3. シェルを再起動
 exec $SHELL
+
+# 4. 開発環境を起動
+dev
+
+# 5. Neovimでhealth checkを実行
+nvim
+:checkhealth
 ```
 
-### 個別コンポーネントのセットアップ
+### 初回起動時の流れ
+
+1. **Neovim起動**: lazy.nvimが自動的にプラグインをインストール（数分）
+2. **LSPサーバー**: `:Mason`で必要な言語のLSPサーバーをインストール
+3. **Tmuxプラグイン**: `Prefix (Ctrl+A) + I`でプラグインをインストール
+
+## 🎮 使い方
+
+### devコマンド
+
+`dev`コマンドでNeovim + Tmuxを一発で起動できます。
 
 ```bash
-# AstroNvimのみ
-./scripts/setup.sh --nvim --install
+# 基本起動（claudeレイアウトがデフォルト）
+dev
 
-# Zsh + Starshipのみ
-./scripts/setup.sh --shell --install
+# セッション名を指定
+dev myproject
 
-# WezTermのみ
-./scripts/setup.sh --terminal --install
+# ディレクトリを指定
+dev myproject ~/code/myapp
 
-# ドライランモード（実際にはインストールしない）
-./scripts/setup.sh --all --dry-run
+# レイアウトを指定
+dev --layout claude    # Claude Code併用（デフォルト）
+dev --layout split     # エディタ + ターミナル分割
+dev --layout full      # フルスクリーン
+
+# ヘルプ表示
+dev --help
 ```
+
+### レイアウト
+
+**claude（デフォルト）**: Claude Code併用レイアウト
+```
+┌──────────┬──────┐
+│          │ Git  │
+│ Neovim   ├──────┤
+│ (60%)    │ Term │
+└──────────┴──────┘
+```
+
+**split**: エディタ + ターミナル分割
+```
+┌─────────────────┐
+│ Neovim (70%)    │
+├─────────────────┤
+│ Terminal (30%)  │
+└─────────────────┘
+```
+
+**full**: エディタフルスクリーン
+```
+┌─────────────────┐
+│                 │
+│ Neovim (100%)   │
+│                 │
+└─────────────────┘
+```
+
+### Claude Code併用ワークフロー
+
+```bash
+# 1. Neovim + Tmuxを起動
+dev
+
+# 2. 別タブでClaude Code起動
+# Cmd/Ctrl+T で新規タブ
+cursor .
+
+# 3. 作業開始
+# - Neovim: 設定ファイル、スクリプト編集、Git操作
+# - Claude Code: 新機能開発、リファクタリング
+# - Git pane: 変更確認
+# - Terminal pane: テスト実行、ビルド
+```
+
+### 基本的なキーバインド
+
+**統合ナビゲーション:**
+```
+Ctrl+h/j/k/l    ペイン/ウィンドウ移動（全レイヤー）
+```
+
+**Neovim（Leader: Space）:**
+```
+<leader>ff      ファイル検索
+<leader>fg      テキスト検索
+<leader>e       ファイルツリー
+<leader>gs      Git status
+gd              定義ジャンプ
+K               ホバー情報
+<leader>ca      コードアクション
+Ctrl+S          保存
+```
+
+**Tmux（Prefix: Ctrl+A）:**
+```
+Prefix |        垂直分割
+Prefix -        水平分割
+Prefix c        新規ウィンドウ
+Prefix s        セッション一覧
+Prefix d        デタッチ
+```
+
+**WezTerm（macOS: Cmd、Windows/Linux: Ctrl）:**
+```
+Cmd/Ctrl+T      新規タブ
+Cmd/Ctrl+W      タブを閉じる
+Cmd/Ctrl+[1-9]  タブ切り替え
+```
+
+詳細は [docs/keybindings.md](docs/keybindings.md) を参照してください。
 
 ## 🔄 設定の同期
 
@@ -191,145 +289,96 @@ dotfilesとローカルPC間で設定を同期できます。
 ./scripts/sync.sh pull
 
 # 個別に取り込み
+./scripts/sync.sh pull --nvim      # Neovim設定のみ
 ./scripts/sync.sh pull --terminal  # WezTerm設定のみ
-./scripts/sync.sh pull --shell     # シェル設定のみ
 
 # 取り込み後はコミット
 git add .
 git commit -m "Update configurations from local"
 ```
 
-### 推奨ワークフロー
-
-1. **開発**: dotfilesで設定を編集
-2. **反映**: `./scripts/sync.sh push` でローカルに反映
-3. **確認**: ターミナルやエディタで動作確認
-4. **コミット**: `git add . && git commit` で変更を保存
-
-## 🧹 クリーニングと復元
-
-### 既存設定のクリーニング
-
-```bash
-# ドライラン（何が削除されるか確認）
-./scripts/clean.sh --dry-run
-
-# 自動バックアップ付きクリーニング
-./scripts/clean.sh --all
-
-# 個別クリーニング
-./scripts/clean.sh --nvim          # Neovim設定のみ
-./scripts/clean.sh --shell         # シェル設定のみ
-./scripts/clean.sh --terminal      # ターミナル設定のみ
-
-# バックアップなしでクリーニング（非推奨）
-./scripts/clean.sh --all --no-backup --force
-```
-
-### バックアップからの復元
-
-```bash
-# バックアップ一覧表示
-./scripts/restore.sh --list
-
-# 最新バックアップから復元
-./scripts/restore.sh --latest
-
-# 特定バックアップから復元
-./scripts/restore.sh --backup 20260111_143022
-
-# 個別復元
-./scripts/restore.sh --latest --nvim      # Neovimのみ
-./scripts/restore.sh --latest --shell     # シェル設定のみ
-```
-
 ## 📦 含まれる設定
 
-### エディタ・IDE
+### Neovim
 
-#### AstroNvim
-- **LSP統合**: TypeScript、Rust、Go、Python、Lua等
-- **自動フォーマット**: 保存時に自動フォーマット
-- **Git統合**: Gitsigns、Neogit、Diffview
-- **ファジーファインダー**: Telescope
-- **GitHub Copilot**: AI補完統合
-- **カスタムプラグイン**: Trouble、todo-comments、mini.nvim等
+**コアプラグイン:**
+- **lazy.nvim**: 高速プラグインマネージャー
+- **Tokyo Night Night**: カラースキーム
+- **nvim-treesitter**: シンタックスハイライト（15言語）
+- **nvim-lspconfig**: LSP統合
+- **mason.nvim**: LSPサーバー管理
+- **nvim-cmp**: 補完エンジン
+- **LuaSnip**: スニペット
+- **telescope.nvim**: ファジーファインダー
+- **gitsigns.nvim**: Git統合
 
-#### Cursor（予定）
-- AI統合設定
-- カスタムスニペット
-- キーバインド
+**UI拡張:**
+- **nvim-tree**: ファイルツリー
+- **lualine**: ステータスライン
+- **which-key**: キーバインドヘルプ
+- **indent-blankline**: インデントガイド
+- **dressing.nvim**: UI改善
+- **nvim-notify**: 通知
 
-### シェル環境
+**エディター拡張:**
+- **Comment.nvim**: コメント
+- **nvim-autopairs**: 括弧自動補完
+- **mini.nvim**: surround, ai, splitjoin, move
+- **nvim-ts-autotag**: HTMLタグ自動補完
+- **trouble.nvim**: 診断一覧
+- **toggleterm.nvim**: ターミナル統合
+- **vim-tmux-navigator**: Tmux統合
 
-#### Zsh
-- **XDG Base Directory準拠**: 整理された設定ファイル配置
-- **高度な履歴管理**: 検索、共有、重複排除
-- **モダンコマンド**: eza、bat、fd、rg等への置き換え
+**言語別プラグイン:**
+- **TypeScript**: typescript-tools.nvim
+- **Flutter**: flutter-tools.nvim
+- **Rust**: rust-tools.nvim, crates.nvim
+- **Go**: go.nvim
+- **Python**: venv-selector.nvim
+- **Java**: nvim-jdtls
+- **Ruby**: vim-rails
+- **Markdown**: markdown-preview.nvim
+
+**フォーマッター・Linter:**
+- **conform.nvim**: 自動フォーマット（15言語）
+- **nvim-lint**: リアルタイムLint
+
+### Tmux
+
+- **Prefix**: `Ctrl+A`
+- **vim-tmux-navigator**: Neovim統合
+- **Tokyo Night Night**: カラースキーム
+- **TPM**: プラグインマネージャー
+- **tmux-resurrect**: セッション保存
+- **tmux-continuum**: 自動保存
+- **tmux-yank**: クリップボード統合
+
+### WezTerm
+
+- **GPU加速**: WebGPU、120 FPS
+- **OS別キーバインド**: macOS（Cmd）、Windows/Linux（Ctrl）
+- **カラー統合**: Neovim優先モード
+- **透過設定**: 0.8透過度、macOSブラー効果
+- **統合ナビゲーション**: `Ctrl+h/j/k/l`
+
+### Zsh + Starship
+
+- **高速起動**: Sheldon遅延読み込み
 - **豊富なエイリアス**: Git、Docker、Kubernetes等
 - **便利な関数**: mkcd、extract、fcd、fv、fgb等
-
-#### Sheldonプラグイン
-- **高速起動**: 遅延読み込み対応
-- **自動補完**: zsh-completions、fzf統合
-- **シンタックスハイライト**: fast-syntax-highlighting
-- **オートサジェスト**: zsh-autosuggestions
-- **履歴検索**: zsh-history-substring-search
-- **ツール統合**: Git、Docker、Kubectl、npm等
-
-#### Starship
-- **美しいプロンプト**: 2行表示、カスタムシンボル
-- **Git統合**: ブランチ、ステータス、メトリクス表示
-- **言語バージョン表示**: Node、Python、Rust、Go、Dart等
-- **コマンド実行時間**: 500ms以上のコマンドを表示
-- **バッテリー表示**: 残量に応じた色分け
-
-### ターミナル
-
-#### WezTerm
-- **GPU加速**: WebGPU、120 FPS
-- **カラースキーム**: カスタムカラー設定
-- **半透明背景**: 0.8透過度、macOSではブラー効果
-- **タブ/ペイン管理**: Vim風キーバインド
-- **Claude監視機能**: タブごとの実行状態表示
-- **Git統合**: リポジトリ名を自動表示
-- **自動分割レイアウト**: 3ペイン構成を一発作成
-- **OS別設定**: macOS、Linux、Windows対応
-
-**キーバインド**:
-- Leader key: `Ctrl+Space`
-- ペイン分割: `Leader+s`（垂直）、`Leader+v`（水平）
-- 自動レイアウト: `Leader+w`
-- ペイン移動: `Leader+h/j/k/l`
-
-### CLIツール（予定）
-
-- **Git**: エイリアス、差分ツール、マージツール
-- **tmux**: セッション管理、キーバインド
-- **fzf**: ファジーファインダー
-- **ripgrep**: 高速検索
-- **fd**: 高速ファイル検索
-- **bat**: catの代替
-- **eza**: lsの代替
-
-### OS別設定（予定）
-
-- **Linux**: i3、AutoKey
-- **Windows**: PowerShell、AutoHotkey、PowerToys
-- **macOS**: Homebrew、defaults
+- **美しいプロンプト**: Git統合、言語バージョン表示
 
 ## 📚 ドキュメント
 
 詳細なドキュメントは`docs/`ディレクトリを参照してください：
 
-| ドキュメント | 説明 |
-|-------------|------|
-| [要件定義](docs/requirements/first-requirement.md) | プロジェクトの要件と仕様 |
-| [実装計画](docs/implementation-plan.md) | Phase別の実装計画 |
-| [フォントインストールガイド](docs/guides/font-installation.md) | Moralerspaceのインストール方法 |
-| セットアップガイド（予定） | 詳細なセットアップ手順 |
-| カスタマイズガイド（予定） | 設定のカスタマイズ方法 |
-| トラブルシューティング（予定） | よくある問題と解決方法 |
+| ドキュメント | 説明 | 行数 |
+|-------------|------|------|
+| [要件定義](docs/requirements/neovim-tmux-claude-parallel-dev.md) | 完全な要件と設計 | 3,700行 |
+| [キーバインディング](docs/keybindings.md) | 全キーバインド一覧 | 1,000行 |
+| [カラースキーム統合](docs/colorscheme-integration.md) | 色の設定ガイド | - |
+| [セットアップガイド](docs/setup-guide-neovim-tmux.md) | インストール手順 | - |
+| [実装サマリー](docs/implementation-summary.md) | 実装内容の概要 | - |
 
 ## 🔧 カスタマイズ
 
@@ -339,50 +388,115 @@ git commit -m "Update configurations from local"
 
 | ファイル | 説明 |
 |---------|------|
-| `nvim/lua/plugins/user.lua` | 独自プラグイン追加 |
-| `nvim/lua/plugins/astrocore.lua` | キーマップ、オプション設定 |
-| `nvim/lua/plugins/astrolsp.lua` | LSP設定 |
-| `zsh/zshrc` | シェル設定（エイリアス、関数） |
-| `zsh/zshenv` | 環境変数設定 |
-| `zsh/sheldon/plugins.toml` | プラグイン設定 |
-| `wezterm/.config/wezterm/wezterm.lua` | ターミナル設定 |
+| `nvim/lua/config/options.lua` | Neovimオプション |
+| `nvim/lua/config/keymaps.lua` | キーマッピング |
+| `nvim/lua/plugins/*.lua` | プラグイン設定 |
+| `tmux/.tmux.conf` | Tmux設定 |
+| `wezterm/.config/wezterm/wezterm.lua` | WezTerm設定 |
+| `zsh/zshrc` | シェル設定 |
 | `starship/.config/starship.toml` | プロンプト設定 |
 
 ### カスタマイズ例
 
 ```bash
 # 1. 設定ファイルを編集
-vim ~/dotfiles/zsh/zshrc
+nvim ~/.config/nvim/lua/config/options.lua
 
-# 2. ローカルに反映
-cd ~/dotfiles
-./scripts/sync.sh push --shell
+# 2. 保存すると自動リロード（autocmd設定済み）
+# または手動リロード: <leader>R
 
-# 3. シェルを再起動
-exec $SHELL
+# 3. 変更をdotfilesに取り込み
+cd ~/development/dotfiles
+./scripts/sync.sh pull --nvim
 
 # 4. 変更をコミット
 git add .
-git commit -m "Add custom aliases"
+git commit -m "Update Neovim options"
 ```
 
 ## 🛠️ 利用可能なスクリプト
 
 | スクリプト | 説明 |
 |-----------|------|
-| `setup.sh` | セットアップ（依存関係インストール + 設定適用） |
+| `install-neovim-tmux.sh` | Neovim + Tmux自動セットアップ |
+| `dev` | Neovim + Tmuxクイック起動 |
 | `sync.sh` | 双方向同期（push/pull） |
 | `clean.sh` | クリーニング（バックアップ付き） |
 | `restore.sh` | 復元（バックアップから） |
 | `verify-setup.sh` | 検証（インストール状態確認） |
 
-すべてのスクリプトは`--help`オプションで使い方を確認できます：
+すべてのスクリプトは`--help`オプションで使い方を確認できます。
+
+## 🐛 トラブルシューティング
+
+### Neovimが起動しない
 
 ```bash
-./scripts/setup.sh --help
-./scripts/sync.sh --help
-./scripts/clean.sh --help
+# エラーメッセージを確認
+nvim
+
+# Health check
+nvim
+:checkhealth
+
+# ログを確認
+tail -f ~/.local/state/nvim/log
 ```
+
+### プラグインがインストールされない
+
+```vim
+" Lazy UI を開く
+:Lazy
+
+" 同期
+:Lazy sync
+
+" ログを確認
+:Lazy log
+```
+
+### LSPが動作しない
+
+```vim
+" LSP情報を確認
+:LspInfo
+
+" Mason UI を開く
+:Mason
+
+" LSPサーバーを手動インストール
+:MasonInstall lua-language-server
+:MasonInstall typescript-language-server
+```
+
+### Ctrl+h/j/k/lが動作しない
+
+```vim
+" vim-tmux-navigatorがインストールされているか確認
+:Lazy
+
+" プラグインをリロード
+:Lazy reload vim-tmux-navigator
+```
+
+```bash
+# Tmux設定を確認
+cat ~/.tmux.conf | grep "is_vim"
+
+# 設定をリロード
+# Prefix (Ctrl+A) + r
+```
+
+詳細は [docs/setup-guide-neovim-tmux.md](docs/setup-guide-neovim-tmux.md) のトラブルシューティングセクションを参照してください。
+
+## 📊 統計
+
+- **設定ファイル数**: 16個
+- **プラグイン数**: 約30個
+- **対応言語**: 15言語
+- **ドキュメント**: 5個（合計6,000行以上）
+- **キーバインド**: 100個以上
 
 ## 🤝 貢献
 
@@ -404,10 +518,13 @@ MIT License - 詳細は [LICENSE](LICENSE) ファイルを参照してくださ�
 
 このdotfilesは以下のプロジェクトを参考にしています：
 
-- [AstroNvim](https://astronvim.com/) - Neovim設定フレームワーク
-- [Moralerspace](https://github.com/yuru7/moralerspace) - プログラミングフォント
-- [Starship](https://starship.rs/) - クロスシェルプロンプト
+- [Neovim](https://neovim.io/) - ハイパー拡張可能なVimベースのテキストエディタ
+- [lazy.nvim](https://github.com/folke/lazy.nvim) - モダンなNeovimプラグインマネージャー
+- [Tmux](https://github.com/tmux/tmux) - ターミナルマルチプレクサ
 - [WezTerm](https://wezfurlong.org/wezterm/) - GPU加速ターミナル
+- [Tokyo Night](https://github.com/folke/tokyonight.nvim) - カラースキーム
+- [Starship](https://starship.rs/) - クロスシェルプロンプト
+- [Moralerspace](https://github.com/yuru7/moralerspace) - プログラミングフォント
 
 ---
 
@@ -416,5 +533,11 @@ MIT License - 詳細は [LICENSE](LICENSE) ファイルを参照してくださ�
 **最終更新**: 2026-01-11
 
 Made with ❤️ for developers
+
+**今すぐ始めましょう！**
+
+```bash
+cd ~/development/dotfiles && ./scripts/install-neovim-tmux.sh
+```
 
 </div>
