@@ -54,12 +54,13 @@ Layouts:
            │                 │
            └─────────────────┘
 
-  claude:  ┌──────────┬──────┐
-           │          │ Git  │
-           │ Neovim   ├──────┤
-           │ (60%)    │ Term │
-           └──────────┴──────┘
-           ※ Claude Codeは別ウィンドウで使用
+  claude:  ┌──────────┬──────────┐
+           │          │ Claude   │
+           │ Neovim   │ Code     │
+           │ (60%)    ├──────────┤
+           │          │ Terminal │
+           └──────────┴──────────┘
+           ※ 右上で 'cursor .' を実行
 
 Examples:
   dev                           # カレントディレクトリで起動
@@ -172,9 +173,14 @@ create_claude_layout() {
   # 右側に縦分割（40%）
   tmux split-window -t "$session:editor" -h -p 40 -c "$dir"
   
-  # 右ペインを横分割（上50%: git、下50%: terminal）
+  # 右ペインを横分割（上50%: Claude Code、下50%: terminal）
   tmux split-window -t "$session:editor.1" -v -p 50 -c "$dir"
-  tmux send-keys -t "$session:editor.1" "git status" C-m
+  
+  # 右上ペイン（Claude Code）にClaude Code起動コマンドを表示
+  tmux send-keys -t "$session:editor.1" "echo '💡 Claude Code起動コマンド:'" C-m
+  tmux send-keys -t "$session:editor.1" "echo '   cursor .'" C-m
+  tmux send-keys -t "$session:editor.1" "echo ''" C-m
+  tmux send-keys -t "$session:editor.1" "echo 'または別タブで: cursor $dir'" C-m
   
   # エディタペインにフォーカス
   tmux select-pane -t "$session:editor.0"
@@ -182,11 +188,11 @@ create_claude_layout() {
   echo ""
   echo "💡 Claude Code併用レイアウト作成完了"
   echo "   - 左: Neovim (60%)"
-  echo "   - 右上: Git (20%)"
+  echo "   - 右上: Claude Code起動用 (20%)"
   echo "   - 右下: Terminal (20%)"
   echo ""
-  echo "   Claude Codeは別ウィンドウで開いてください"
-  echo "   推奨: WezTermの別タブまたはOSのウィンドウ分割機能を使用"
+  echo "   Claude Codeは右上ペインで 'cursor .' を実行するか"
+  echo "   別タブで起動してください"
 }
 
 # ========================================

@@ -120,7 +120,8 @@ local coolors = {
 	COLOR.VERDIGRIS,
 }
 
-local color_primary = coolors[math.random(#coolors)]
+-- local color_primary = coolors[math.random(#coolors)]
+local color_primary = COLOR.VERIDIAN
 local title_color_bg = color_primary.bg
 local title_color_fg = color_primary.fg
 

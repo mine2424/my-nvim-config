@@ -5,7 +5,7 @@
 return {
   -- Mason: LSP server manager
   {
-    "mason-org/mason.nvim",
+    "williamboman/mason.nvim",
     cmd = "Mason",
     build = ":MasonUpdate",
     opts = {
@@ -23,7 +23,7 @@ return {
   -- Mason-LSPConfig: Auto-setup LSP servers
   {
     "williamboman/mason-lspconfig.nvim",
-    dependencies = { "mason-org/mason.nvim" },
+    dependencies = { "williamboman/mason.nvim" },
     opts = {
       ensure_installed = {
         -- Core languages
@@ -63,7 +63,7 @@ return {
     "neovim/nvim-lspconfig",
     event = { "BufReadPre", "BufNewFile" },
     dependencies = {
-      "mason-org/mason.nvim",
+      "williamboman/mason.nvim",
       "williamboman/mason-lspconfig.nvim",
       "hrsh7th/cmp-nvim-lsp",
     },

@@ -184,11 +184,13 @@ dev --help
 
 **claude（デフォルト）**: Claude Code併用レイアウト
 ```
-┌──────────┬──────┐
-│          │ Git  │
-│ Neovim   ├──────┤
-│ (60%)    │ Term │
-└──────────┴──────┘
+┌──────────┬──────────┐
+│          │ Claude   │
+│ Neovim   │ Code     │
+│ (60%)    ├──────────┤
+│          │ Terminal │
+└──────────┴──────────┘
+※ 右上ペインで 'cursor .' を実行してClaude Codeを起動
 ```
 
 **split**: エディタ + ターミナル分割
@@ -212,18 +214,17 @@ dev --help
 ### Claude Code併用ワークフロー
 
 ```bash
-# 1. Neovim + Tmuxを起動
+# 1. Neovim + Tmuxを起動（claudeレイアウト）
 dev
 
-# 2. 別タブでClaude Code起動
-# Cmd/Ctrl+T で新規タブ
-cursor .
+# 2. Claude Codeを起動
+# 方法1: 右上ペインで 'cursor .' を実行
+# 方法2: 別タブで 'cursor .' を実行（Cmd/Ctrl+T で新規タブ）
 
 # 3. 作業開始
-# - Neovim: 設定ファイル、スクリプト編集、Git操作
-# - Claude Code: 新機能開発、リファクタリング
-# - Git pane: 変更確認
-# - Terminal pane: テスト実行、ビルド
+# - 左（Neovim）: 設定ファイル、スクリプト編集、Git操作
+# - 右上（Claude Code）: 新機能開発、リファクタリング、AI支援開発
+# - 右下（Terminal）: テスト実行、ビルド、コマンド実行
 ```
 
 ### 基本的なキーバインド
@@ -245,13 +246,76 @@ K               ホバー情報
 Ctrl+S          保存
 ```
 
-**Tmux（Prefix: Ctrl+A）:**
+**Tmux（Prefix: `Ctrl+A`）:**
+
+**基本操作:**
 ```
-Prefix |        垂直分割
-Prefix -        水平分割
-Prefix c        新規ウィンドウ
-Prefix s        セッション一覧
-Prefix d        デタッチ
+Ctrl+A r        設定をリロード
+Ctrl+A ?        キーバインド一覧表示
+Ctrl+A :        コマンドプロンプト
+```
+
+**ペイン操作:**
+```
+Ctrl+A |        垂直分割（覚え方: 縦線）
+Ctrl+A -        水平分割（覚え方: 横線）
+Ctrl+A x        ペインを閉じる
+Ctrl+A z        ペインをズーム（最大化/復元）
+Ctrl+A Space    レイアウトを切り替え
+Ctrl+A q        ペイン番号を表示
+Ctrl+A S        ペイン同期をトグル
+Ctrl+A >        ペインを右に移動
+Ctrl+A <        ペインを左に移動
+```
+
+**ペイン移動（Prefixなし）:**
+```
+Ctrl+H          左のペインへ移動
+Ctrl+J          下のペインへ移動
+Ctrl+K          上のペインへ移動
+Ctrl+L          右のペインへ移動
+```
+
+**ペインサイズ調整:**
+```
+Ctrl+A H        左に拡大
+Ctrl+A J        下に拡大
+Ctrl+A K        上に拡大
+Ctrl+A L        右に拡大
+Ctrl+A ←→↑↓    矢印キーでサイズ調整
+```
+
+**ウィンドウ操作:**
+```
+Ctrl+A c        新規ウィンドウ作成
+Ctrl+A n        次のウィンドウ
+Ctrl+A p        前のウィンドウ
+Ctrl+A w        ウィンドウ一覧表示
+Ctrl+A 0-9      ウィンドウ番号で移動
+Ctrl+A &        ウィンドウを閉じる
+Ctrl+A ,        ウィンドウ名を変更
+```
+
+**セッション操作:**
+```
+Ctrl+A s        セッション一覧表示
+Ctrl+A C-c      新規セッション作成
+Ctrl+A d        セッションからデタッチ
+Ctrl+A $        セッション名を変更
+Ctrl+A L        最後のセッションに切り替え
+```
+
+**コピー&ペースト（viモード）:**
+```
+Ctrl+A [        コピーモードに入る
+Ctrl+A ]        ペースト
+Ctrl+A v        コピーモードに入る（別キー）
+```
+
+**その他:**
+```
+Ctrl+A t        時計を表示
+Ctrl+A Space    レイアウトを切り替え
 ```
 
 **WezTerm（macOS: Cmd、Windows/Linux: Ctrl）:**
