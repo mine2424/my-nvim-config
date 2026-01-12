@@ -262,6 +262,7 @@ fi
 
 # Claude
 alias cl='claude'
+alias cld='claude --dangerously-skip-permissions'
 alias rcl='claude --resume'
 
 # Utility

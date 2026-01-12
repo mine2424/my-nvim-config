@@ -40,6 +40,7 @@ dotfilesの設定を適用し、必要なツールをインストールします
   --shell            シェル設定のみ（Zsh + Starship）
   --terminal         ターミナル設定のみ（WezTerm）
   --cli              CLIツール設定のみ（Git, tmux等）
+  --claude           Claude設定のみ
 
 オプション:
   --install          依存関係もインストール
@@ -88,6 +89,10 @@ parse_arguments() {
                 ;;
             --cli)
                 COMPONENT="cli"
+                shift
+                ;;
+            --claude)
+                COMPONENT="claude"
                 shift
                 ;;
             --install)
@@ -438,6 +443,54 @@ setup_cli_tools() {
 }
 
 #######################################
+# Claude設定を適用
+#######################################
+setup_claude() {
+    log_section "Claude設定の適用"
+    
+    local dotfiles_root
+    dotfiles_root="$(get_dotfiles_root)"
+    local claude_src="$dotfiles_root/.claude"
+    local claude_dest="$HOME/.claude"
+    
+    if [[ ! -d "$claude_src" ]]; then
+        log_warn "Claude設定が見つかりません: $claude_src"
+        return 0
+    fi
+    
+    if [[ "$DRY_RUN" == "true" ]]; then
+        log_info "[DRY RUN] Claude設定を適用: $claude_src -> $claude_dest"
+        return 0
+    fi
+    
+    # ディレクトリをコピー（シンボリックリンクではなく、ファイルをコピー）
+    # これは.claudeディレクトリ全体をコピーするため
+    if [[ -e "$claude_dest" ]] || [[ -L "$claude_dest" ]]; then
+        if [[ "$CREATE_BACKUP" == "true" ]]; then
+            local backup_path="${claude_dest}.backup.$(date +%Y%m%d_%H%M%S)"
+            log_info "既存設定をバックアップ: $claude_dest -> $backup_path"
+            mv "$claude_dest" "$backup_path"
+        else
+            log_warn "既存設定を削除: $claude_dest"
+            rm -rf "$claude_dest"
+        fi
+    fi
+    
+    # ディレクトリをコピー
+    if cp -r "$claude_src" "$claude_dest" 2>/dev/null; then
+        # deny-check.shに実行権限を付与
+        if [[ -f "$claude_dest/scripts/deny-check.sh" ]]; then
+            chmod +x "$claude_dest/scripts/deny-check.sh"
+        fi
+        log_success "Claude設定を適用しました"
+        return 0
+    else
+        log_error "Claude設定の適用に失敗しました"
+        return 1
+    fi
+}
+
+#######################################
 # すべての設定を適用
 #######################################
 setup_all() {
@@ -445,6 +498,7 @@ setup_all() {
     setup_shell
     setup_terminal
     setup_cli_tools
+    setup_claude
 }
 
 #######################################
@@ -468,6 +522,7 @@ confirm_setup() {
             echo "  - シェル設定（Zsh + Starship）"
             echo "  - ターミナル設定（WezTerm）"
             echo "  - CLIツール設定（Git, tmux等）"
+            echo "  - Claude設定"
             ;;
         nvim)
             echo "  - Neovim設定"
@@ -480,6 +535,9 @@ confirm_setup() {
             ;;
         cli)
             echo "  - CLIツール設定（Git, tmux等）"
+            ;;
+        claude)
+            echo "  - Claude設定"
             ;;
     esac
     
@@ -584,6 +642,9 @@ main() {
             ;;
         cli)
             setup_cli_tools
+            ;;
+        claude)
+            setup_claude
             ;;
         *)
             log_error "不明なコンポーネント: $COMPONENT"

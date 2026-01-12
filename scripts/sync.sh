@@ -38,6 +38,7 @@ dotfilesとローカルPC間で設定を同期します。
   --shell            シェル設定のみ
   --terminal         ターミナル設定のみ
   --cli              CLIツール設定のみ
+  --claude           Claude設定のみ
 
 オプション:
   --dry-run          実際には同期せず、何が行われるか表示
@@ -94,6 +95,10 @@ parse_arguments() {
                 ;;
             --cli)
                 COMPONENT="cli"
+                shift
+                ;;
+            --claude)
+                COMPONENT="claude"
                 shift
                 ;;
             --dry-run)
@@ -276,6 +281,66 @@ sync_cli_tools() {
 }
 
 #######################################
+# Claude設定を同期
+#######################################
+sync_claude() {
+    log_section "Claude設定の同期"
+    
+    local dotfiles_root
+    dotfiles_root="$(get_dotfiles_root)"
+    local claude_dotfiles="$dotfiles_root/.claude"
+    local claude_local="$HOME/.claude"
+    
+    if [[ "$DIRECTION" == "push" ]]; then
+        # dotfiles -> local
+        if [[ -d "$claude_dotfiles" ]]; then
+            # ディレクトリ全体をコピー
+            if [[ "$DRY_RUN" == "true" ]]; then
+                log_info "[DRY RUN] Claude設定を同期予定: $claude_dotfiles -> $claude_local"
+            else
+                # 既存の設定をバックアップ
+                if [[ -e "$claude_local" ]]; then
+                    local backup_path="${claude_local}.backup.$(date +%Y%m%d_%H%M%S)"
+                    log_info "既存設定をバックアップ: $claude_local -> $backup_path"
+                    mv "$claude_local" "$backup_path" 2>/dev/null || true
+                fi
+                
+                # ディレクトリをコピー
+                if cp -r "$claude_dotfiles" "$claude_local" 2>/dev/null; then
+                    # deny-check.shに実行権限を付与
+                    if [[ -f "$claude_local/scripts/deny-check.sh" ]]; then
+                        chmod +x "$claude_local/scripts/deny-check.sh"
+                    fi
+                    log_success "Claude設定を同期しました"
+                else
+                    log_error "Claude設定の同期に失敗しました"
+                    return 1
+                fi
+            fi
+        else
+            log_warn "Claude設定が見つかりません: $claude_dotfiles"
+        fi
+    else
+        # local -> dotfiles
+        if [[ -d "$claude_local" ]]; then
+            if [[ "$DRY_RUN" == "true" ]]; then
+                log_info "[DRY RUN] Claude設定を同期予定: $claude_local -> $claude_dotfiles"
+            else
+                # ディレクトリをコピー
+                if cp -r "$claude_local" "$claude_dotfiles" 2>/dev/null; then
+                    log_success "Claude設定を同期しました"
+                else
+                    log_error "Claude設定の同期に失敗しました"
+                    return 1
+                fi
+            fi
+        else
+            log_warn "Claude設定が見つかりません: $claude_local"
+        fi
+    fi
+}
+
+#######################################
 # すべての設定を同期
 #######################################
 sync_all() {
@@ -283,6 +348,7 @@ sync_all() {
     sync_shell
     sync_terminal
     sync_cli_tools
+    sync_claude
 }
 
 #######################################
@@ -312,6 +378,7 @@ confirm_sync() {
             echo "  - シェル設定（Zsh + Starship）"
             echo "  - ターミナル設定（WezTerm）"
             echo "  - CLIツール設定（Git, tmux等）"
+            echo "  - Claude設定"
             ;;
         nvim)
             echo "  - Neovim設定"
@@ -324,6 +391,9 @@ confirm_sync() {
             ;;
         cli)
             echo "  - CLIツール設定（Git, tmux等）"
+            ;;
+        claude)
+            echo "  - Claude設定"
             ;;
     esac
     
@@ -396,6 +466,9 @@ main() {
             ;;
         cli)
             sync_cli_tools
+            ;;
+        claude)
+            sync_claude
             ;;
         *)
             log_error "不明なコンポーネント: $COMPONENT"
