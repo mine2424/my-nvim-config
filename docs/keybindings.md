@@ -277,7 +277,7 @@ return config
 # Prefix設定
 # ========================================
 
-# Prefixキーを Ctrl+A に変更（Ctrl+Bより押しやすい）
+# Prefixキーを Ctrl+A に変更
 set -g prefix C-a
 unbind C-b
 bind C-a send-prefix
@@ -328,11 +328,9 @@ bind r source-file ~/.tmux.conf \; display "Config reloaded!"
 
 # 垂直分割（|）
 bind | split-window -h -c "#{pane_current_path}"
-bind '\' split-window -h -c "#{pane_current_path}"
 
 # 水平分割（-）
 bind - split-window -v -c "#{pane_current_path}"
-bind _ split-window -v -c "#{pane_current_path}"
 
 # デフォルトのキーを無効化
 unbind '"'
@@ -372,31 +370,15 @@ bind -r J resize-pane -D 5
 bind -r K resize-pane -U 5
 bind -r L resize-pane -R 5
 
-# 矢印キーでもリサイズ可能
-bind -r Left resize-pane -L 5
-bind -r Down resize-pane -D 5
-bind -r Up resize-pane -U 5
-bind -r Right resize-pane -R 5
-
 # ========================================
 # ペイン操作
 # ========================================
 
-# ペインズーム
-bind z resize-pane -Z
-
-# ペインを閉じる
+# ペイン操作
 bind x kill-pane
-
-# ペインレイアウト変更
-bind Space next-layout
-
-# ペインの入れ替え
-bind > swap-pane -D
-bind < swap-pane -U
-
-# ペイン番号表示（移動用）
+bind z resize-pane -Z
 bind q display-panes
+bind Space next-layout
 
 # ========================================
 # ウィンドウ管理
@@ -408,8 +390,6 @@ bind c new-window -c "#{pane_current_path}"
 # ウィンドウ移動
 bind n next-window
 bind p previous-window
-bind C-n next-window
-bind C-p previous-window
 
 # ウィンドウ番号で移動（Prefix + 数字）
 bind 0 select-window -t :=0
@@ -426,14 +406,11 @@ bind 9 select-window -t :=9
 # ウィンドウを閉じる
 bind & kill-window
 
-# ウィンドウ名変更
-bind , command-prompt -I "#W" "rename-window '%%'"
-
-# ウィンドウ検索
-bind f command-prompt "find-window '%%'"
-
 # ウィンドウ一覧
 bind w choose-window
+
+# ウィンドウ名変更
+bind , command-prompt -I "#W" "rename-window '%%'"
 
 # ========================================
 # セッション管理
@@ -442,17 +419,11 @@ bind w choose-window
 # セッション一覧
 bind s choose-session
 
-# 新規セッション
-bind C-c new-session
-
-# セッション名変更
-bind '$' command-prompt -I "#S" "rename-session '%%'"
-
 # デタッチ
 bind d detach-client
 
-# 前回のセッションへ
-bind L switch-client -l
+# セッション名変更
+bind '$' command-prompt -I "#S" "rename-session '%%'"
 
 # ========================================
 # コピーモード（vi風）
@@ -463,11 +434,9 @@ setw -g mode-keys vi
 
 # コピーモード開始
 bind [ copy-mode
-bind v copy-mode
 
 # ペースト
 bind ] paste-buffer
-bind P paste-buffer
 
 # コピーモード内のキーバインド
 bind -T copy-mode-vi v send -X begin-selection
@@ -479,65 +448,49 @@ bind -T copy-mode-vi Y send -X copy-line
 # マウスドラッグでコピー
 bind -T copy-mode-vi MouseDragEnd1Pane send -X copy-selection-and-cancel
 
-# ========================================
-# その他
-# ========================================
-
-# 時計表示
-bind t clock-mode
-
-# コマンドプロンプト
-bind : command-prompt
-
-# ヘルプ
-bind ? list-keys
 ```
 
 ### Tmux キーバインド一覧
 
-| カテゴリ | キー | 動作 |
-|---------|------|------|
-| **Prefix** | `Ctrl+A` | Prefixキー |
+| カテゴリ | キー | 動作 | 覚え方 |
+|---------|------|------|--------|
+| **Prefix** | `Ctrl+A` | Prefixキー | - |
 | **基本操作** |
-| | `Prefix r` | 設定リロード |
-| | `Prefix d` | デタッチ |
-| | `Prefix ?` | キーバインド一覧 |
-| | `Prefix :` | コマンドプロンプト |
+| | `Prefix r` | 設定リロード | Reload |
+| | `Prefix d` | デタッチ | Detach |
+| | `Prefix ?` | キーバインド一覧 | (デフォルト) |
+| | `Prefix :` | コマンドプロンプト | (デフォルト) |
 | **ペイン分割** |
-| | `Prefix \|` または `Prefix \` | 垂直分割 |
-| | `Prefix -` または `Prefix _` | 水平分割 |
+| | `Prefix \|` | 垂直分割 | `\|`の形 |
+| | `Prefix -` | 水平分割 | `-`の形 |
 | **ペイン移動** |
-| | `Ctrl+h/j/k/l` | ペイン移動（Neovim統合） |
-| | `Prefix h/j/k/l` | ペイン移動 |
-| | `Prefix q` | ペイン番号表示 |
+| | `Ctrl+h/j/k/l` | ペイン移動（Neovim統合） | Vim風 |
+| | `Prefix h/j/k/l` | ペイン移動 | Vim風 |
+| | `Prefix q` | ペイン番号表示 | Quick |
 | **ペインリサイズ** |
-| | `Prefix H/J/K/L` | リサイズ（繰り返し可） |
-| | `Prefix ←/↓/↑/→` | リサイズ（矢印キー） |
+| | `Prefix H/J/K/L` | リサイズ（繰り返し可） | 大文字 |
 | **ペイン操作** |
-| | `Prefix z` | ペインズーム |
-| | `Prefix x` | ペインを閉じる |
-| | `Prefix Space` | レイアウト変更 |
-| | `Prefix >/<` | ペイン入れ替え |
+| | `Prefix x` | ペインを閉じる | eXit |
+| | `Prefix z` | ペインズーム | Zoom |
+| | `Prefix Space` | レイアウト変更 | - |
 | **ウィンドウ管理** |
-| | `Prefix c` | 新規ウィンドウ |
-| | `Prefix n/p` | 次/前のウィンドウ |
-| | `Prefix [0-9]` | ウィンドウ番号で移動 |
-| | `Prefix ,` | ウィンドウ名変更 |
-| | `Prefix w` | ウィンドウ一覧 |
-| | `Prefix f` | ウィンドウ検索 |
-| | `Prefix &` | ウィンドウを閉じる |
+| | `Prefix c` | 新規ウィンドウ | Create |
+| | `Prefix n` | 次のウィンドウ | Next |
+| | `Prefix p` | 前のウィンドウ | Previous |
+| | `Prefix w` | ウィンドウ一覧 | Window |
+| | `Prefix ,` | ウィンドウ名変更 | - |
+| | `Prefix &` | ウィンドウを閉じる | - |
+| | `Prefix [0-9]` | ウィンドウ番号で移動 | - |
 | **セッション管理** |
-| | `Prefix s` | セッション一覧 |
-| | `Prefix Ctrl+C` | 新規セッション |
-| | `Prefix $` | セッション名変更 |
-| | `Prefix L` | 前回のセッション |
+| | `Prefix s` | セッション一覧 | Session |
+| | `Prefix $` | セッション名変更 | - |
 | **コピーモード** |
-| | `Prefix [` または `Prefix v` | コピーモード開始 |
-| | `v` | 選択開始 |
-| | `V` | 行選択 |
-| | `Ctrl+v` | 矩形選択 |
-| | `y` | コピーして終了 |
-| | `Prefix ]` または `Prefix P` | ペースト |
+| | `Prefix [` | コピーモード開始 | - |
+| | `v` (コピーモード内) | 選択開始 | Vim風 |
+| | `V` (コピーモード内) | 行選択 | Vim風 |
+| | `Ctrl+v` (コピーモード内) | 矩形選択 | Vim風 |
+| | `y` (コピーモード内) | コピーして終了 | Yank |
+| | `Prefix ]` | ペースト | - |
 
 ---
 

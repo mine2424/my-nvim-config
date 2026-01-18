@@ -215,7 +215,7 @@ config.use_ime = true
 config.tab_bar_at_bottom = false -- Gist style: タブバーを上に配置
 config.tab_max_width = 40
 config.use_fancy_tab_bar = true
-config.show_new_tab_button_in_tab_bar = true
+config.show_new_tab_button_in_tab_bar = false
 config.show_tab_index_in_tab_bar = false -- Gist style
 
 -- ========================================
@@ -523,7 +523,7 @@ local function get_disk_usage()
 		if success and stdout then
 			local usage = stdout:gsub("\n", ""):gsub("%s+", "")
 			if usage and usage ~= "" then
-				return usage .. "%"
+				return 100 -usage .. "%"
 			end
 		end
 	elseif os == "linux" then
@@ -536,7 +536,7 @@ local function get_disk_usage()
 		if success and stdout then
 			local usage = stdout:gsub("\n", ""):gsub("%s+", "")
 			if usage and usage ~= "" then
-				return usage .. "%"
+				return 100 - usage .. "%"
 			end
 		end
 	elseif os == "windows" then
@@ -548,7 +548,7 @@ local function get_disk_usage()
 			"$disk = Get-CimInstance Win32_LogicalDisk -Filter \"DeviceID='C:'\"; [math]::Round((($disk.Size - $disk.FreeSpace) / $disk.Size) * 100)"
 		})
 		if success and stdout then
-			return stdout:gsub("\n", ""):gsub("%s+", "") .. "%"
+			return 100 - stdout:gsub("\n", ""):gsub("%s+", "") .. "%"
 		end
 	end
 	return "N/A"

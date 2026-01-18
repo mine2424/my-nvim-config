@@ -131,8 +131,6 @@ bindkey '^Y' yank                                 # Ctrl+Y
 # ========================================
 
 # Editor
-alias vi='nvim'
-alias vim='nvim'
 alias v='nvim'
 
 # Directory Navigation
