@@ -39,10 +39,10 @@ config.window_decorations = "RESIZE"
 config.window_background_opacity = 0.85
 config.macos_window_background_blur = 8
 config.window_padding = {
-	left = "0.5cell",
-	right = "0.5cell",
+	left = "1cell",
+	right = "1cell",
 	top = "0.5cell",
-	bottom = "0cell",
+	bottom = "0.5cell",
 }
 config.win32_system_backdrop = "Acrylic" -- Windows用
 
@@ -120,8 +120,8 @@ local coolors = {
 	COLOR.VERDIGRIS,
 }
 
--- local color_primary = coolors[math.random(#coolors)]
-local color_primary = COLOR.VERIDIAN
+local color_primary = coolors[math.random(#coolors)]
+-- local color_primary = COLOR.VERIDIAN
 local title_color_bg = color_primary.bg
 local title_color_fg = color_primary.fg
 
@@ -173,91 +173,22 @@ config.colors = {
 	split = "#3b4261",
 }
 
--- 代替設定: 独自のカラーパレットを使用する場合
--- （Neovimで transparent = true, terminal_colors = false に設定）
---[[
-config.colors = {
-	foreground = "#c0caf5",
-	background = "#1a1b26",
-	cursor_bg = "#c0caf5",
-	cursor_fg = "#1a1b26",
-	cursor_border = "#c0caf5",
-	selection_bg = "#283457",
-	selection_fg = "#c0caf5",
-	
-	-- Tokyo Night Night カラー
-	ansi = {
-		"#15161e", -- black
-		"#f7768e", -- red
-		"#9ece6a", -- green
-		"#e0af68", -- yellow
-		"#7aa2f7", -- blue
-		"#bb9af7", -- magenta
-		"#7dcfff", -- cyan
-		"#a9b1d6", -- white
-	},
-	brights = {
-		"#414868", -- bright black
-		"#f7768e", -- bright red
-		"#9ece6a", -- bright green
-		"#e0af68", -- bright yellow
-		"#7aa2f7", -- bright blue
-		"#bb9af7", -- bright magenta
-		"#7dcfff", -- bright cyan
-		"#c0caf5", -- bright white
-	},
-	
-	tab_bar = {
-		background = "#1a1b26",
-		active_tab = {
-			bg_color = "#7aa2f7",
-			fg_color = "#1a1b26",
-			intensity = "Bold",
-		},
-		inactive_tab = {
-			bg_color = "#292e42",
-			fg_color = "#545c7e",
-			intensity = "Half",
-		},
-	},
-}
---]]
-
 -- Window frame colors (must be set after color theme is initialized)
 config.window_frame = {
 	active_titlebar_bg = title_color_bg,
 	inactive_titlebar_bg = title_color_bg,
 	border_bottom_height = "0.5cell",
-	font_size = 10.0, -- Gist style
+	font_size = 11.0,
 }
 
 -- ========================================
 -- Font Configuration
 -- ========================================
 
--- Font Configuration
--- Moralerspace: プログラミング向けフォント（インストールされている場合）
--- https://github.com/yuru7/moralerspace
--- Monaspace (欧文) + IBM Plex Sans JP (和文) の合成フォント
--- Texture healing システム搭載、半角3:全角5の幅比率
---
--- 注意: Moralerspaceがインストールされていない場合、エラーを避けるために
--- コメントアウトされています。インストール後、コメントを外してください。
---
--- Moralerspaceをインストールする場合:
---   macOS: brew install --cask font-moralerspace
---   詳細: docs/guides/font-installation.md
--- フォント設定（エラーを避けるため、確実に存在するフォントを使用）
+
+-- フォント設定
 config.font = wezterm.font_with_fallback({
-	-- $HOME/Library/Fonts/JetBrainsMono[wght].ttf index=0 variation=4, CoreText
 	"JetBrains Mono",
-  
-	-- <built-in>, BuiltIn
-	-- Assumed to have Emoji Presentation
-	"Noto Color Emoji",
-  
-	-- <built-in>, BuiltIn
-	"Symbols Nerd Font Mono",  
 })
 
 -- Font features (ligatures)
@@ -284,7 +215,7 @@ config.use_ime = true
 config.tab_bar_at_bottom = false -- Gist style: タブバーを上に配置
 config.tab_max_width = 40
 config.use_fancy_tab_bar = true
-config.show_new_tab_button_in_tab_bar = false
+config.show_new_tab_button_in_tab_bar = true
 config.show_tab_index_in_tab_bar = false -- Gist style
 
 -- ========================================
@@ -377,6 +308,7 @@ wezterm.on("gui-startup", function(cmd)
 	local mux = wezterm.mux
 
 	local padSize = 80
+	-- TODO: 画面サイズを取得して最大幅で表示できるようにする
 	local screenWidth = 2560
 	local screenHeight = 1600
 
@@ -460,7 +392,7 @@ wezterm.on("format-tab-title", function(tab, tabs, panes, conf, hover, max_width
 end)
 
 -- ========================================
--- Right Status (Gist style: Battery + Workspace + Time)
+-- Right Status (Gist style: System Info + Workspace + Time)
 -- ========================================
 
 config.status_update_interval = 1000
@@ -468,58 +400,180 @@ config.status_update_interval = 1000
 local color_off = title_color_bg:lighten(0.4)
 local color_on = color_off:lighten(0.4)
 
-wezterm.on("update-right-status", function(window, pane)
-	-- Battery display (Gist style)
-	local bat = ""
-	local battery_info = wezterm.battery_info()
-	if battery_info and #battery_info > 0 then
-		local b = battery_info[1]
-		bat = wezterm.format({
-			{
-				Foreground = {
-					Color = b.state_of_charge > 0.2 and color_on or color_off,
-				},
-			},
-			{ Text = "▉" },
-			{
-				Foreground = {
-					Color = b.state_of_charge > 0.4 and color_on or color_off,
-				},
-			},
-			{ Text = "▉" },
-			{
-				Foreground = {
-					Color = b.state_of_charge > 0.6 and color_on or color_off,
-				},
-			},
-			{ Text = "▉" },
-			{
-				Foreground = {
-					Color = b.state_of_charge > 0.8 and color_on or color_off,
-				},
-			},
-			{ Text = "▉" },
-			{
-				Background = {
-					Color = b.state_of_charge > 0.98 and color_on or color_off,
-				},
-			},
-			{
-				Foreground = {
-					Color = b.state == "Charging" and color_on:lighten(0.3):complement()
-						or (b.state_of_charge < 0.2 and wezterm.GLOBAL.count % 2 == 0)
-							and color_on:lighten(0.1):complement()
-						or color_off:darken(0.1),
-				},
-			},
-			{ Text = " ⚡ " },
+-- システム情報取得関数
+local function get_memory_usage()
+	local success, stdout
+	if os == "macOS" then
+		-- macOS: vm_stat と sysctl を使用してメモリ使用率を計算
+		success, stdout = wezterm.run_child_process({
+			"sh",
+			"-c",
+			"pagesize=$(vm_stat | grep 'page size' | awk '{print $8}'); mem_total=$(sysctl -n hw.memsize); mem_free=$(vm_stat | grep 'Pages free' | awk '{print $3}' | sed 's/\\.//'); mem_used=$((mem_total - mem_free * pagesize)); echo $((mem_used * 100 / mem_total))"
 		})
-	else
-		-- No battery (desktop PC)
-		bat = wezterm.format({
-			{ Text = "🖥" },
+		if success and stdout then
+			local usage = stdout:gsub("\n", ""):gsub("%s+", "")
+			if usage and usage ~= "" and tonumber(usage) then
+				return usage .. "%"
+			end
+		end
+		-- フォールバック: top コマンドを使用（簡易版）
+		success, stdout = wezterm.run_child_process({
+			"sh",
+			"-c",
+			"top -l 1 | grep 'PhysMem' | awk '{used=$2; wired=$4; total=used+wired+$6; if(total>0) printf \"%.0f\", (used/total)*100}'"
 		})
+		if success and stdout then
+			local usage = stdout:gsub("\n", ""):gsub("%s+", "")
+			if usage and usage ~= "" and tonumber(usage) then
+				return usage .. "%"
+			end
+		end
+	elseif os == "linux" then
+		-- Linux: free コマンドを使用
+		success, stdout = wezterm.run_child_process({
+			"sh",
+			"-c",
+			"free | grep Mem | awk '{printf \"%.0f\", $3/$2 * 100}'"
+		})
+		if success and stdout then
+			local usage = stdout:gsub("\n", ""):gsub("%s+", "")
+			if usage and usage ~= "" then
+				return usage .. "%"
+			end
+		end
+	elseif os == "windows" then
+		-- Windows: PowerShell を使用
+		success, stdout = wezterm.run_child_process({
+			"powershell",
+			"-NoProfile",
+			"-Command",
+			"$mem = Get-CimInstance Win32_OperatingSystem; [math]::Round((($mem.TotalVisibleMemorySize - $mem.FreePhysicalMemory) / $mem.TotalVisibleMemorySize) * 100)"
+		})
+		if success and stdout then
+			return stdout:gsub("\n", ""):gsub("%s+", "") .. "%"
+		end
 	end
+	return "N/A"
+end
+
+local function get_cpu_usage()
+	local success, stdout
+	if os == "macOS" then
+		-- macOS: top コマンドを使用
+		success, stdout = wezterm.run_child_process({
+			"sh",
+			"-c",
+			"top -l 1 | grep 'CPU usage' | awk '{print $3}' | sed 's/%//'"
+		})
+		if success and stdout then
+			local usage = stdout:gsub("\n", ""):gsub("%s+", "")
+			if usage and usage ~= "" then
+				return usage .. "%"
+			end
+		end
+	elseif os == "linux" then
+		-- Linux: top コマンドを使用
+		success, stdout = wezterm.run_child_process({
+			"sh",
+			"-c",
+			"top -bn1 | grep 'Cpu(s)' | sed 's/.*, *\\([0-9.]*\\)%* id.*/\\1/' | awk '{print 100 - $1}'"
+		})
+		if success and stdout then
+			local usage = stdout:gsub("\n", ""):gsub("%s+", "")
+			if usage and usage ~= "" then
+				return string.format("%.0f", tonumber(usage) or 0) .. "%"
+			end
+		end
+		-- フォールバック: /proc/stat を使用
+		success, stdout = wezterm.run_child_process({
+			"sh",
+			"-c",
+			"grep 'cpu ' /proc/stat | awk '{usage=($2+$4)*100/($2+$4+$5)} END {print usage}'"
+		})
+		if success and stdout then
+			local usage = stdout:gsub("\n", ""):gsub("%s+", "")
+			if usage and usage ~= "" then
+				return string.format("%.0f", tonumber(usage) or 0) .. "%"
+			end
+		end
+	elseif os == "windows" then
+		-- Windows: PowerShell を使用
+		success, stdout = wezterm.run_child_process({
+			"powershell",
+			"-NoProfile",
+			"-Command",
+			"$cpu = Get-CimInstance Win32_Processor | Measure-Object -property LoadPercentage -Average; [math]::Round($cpu.Average)"
+		})
+		if success and stdout then
+			return stdout:gsub("\n", ""):gsub("%s+", "") .. "%"
+		end
+	end
+	return "N/A"
+end
+
+local function get_disk_usage()
+	local success, stdout
+	if os == "macOS" then
+		-- macOS: df コマンドを使用
+		success, stdout = wezterm.run_child_process({
+			"sh",
+			"-c",
+			"df -h / | tail -1 | awk '{print $5}' | sed 's/%//'"
+		})
+		if success and stdout then
+			local usage = stdout:gsub("\n", ""):gsub("%s+", "")
+			if usage and usage ~= "" then
+				return usage .. "%"
+			end
+		end
+	elseif os == "linux" then
+		-- Linux: df コマンドを使用
+		success, stdout = wezterm.run_child_process({
+			"sh",
+			"-c",
+			"df -h / | tail -1 | awk '{print $5}' | sed 's/%//'"
+		})
+		if success and stdout then
+			local usage = stdout:gsub("\n", ""):gsub("%s+", "")
+			if usage and usage ~= "" then
+				return usage .. "%"
+			end
+		end
+	elseif os == "windows" then
+		-- Windows: PowerShell を使用
+		success, stdout = wezterm.run_child_process({
+			"powershell",
+			"-NoProfile",
+			"-Command",
+			"$disk = Get-CimInstance Win32_LogicalDisk -Filter \"DeviceID='C:'\"; [math]::Round((($disk.Size - $disk.FreeSpace) / $disk.Size) * 100)"
+		})
+		if success and stdout then
+			return stdout:gsub("\n", ""):gsub("%s+", "") .. "%"
+		end
+	end
+	return "N/A"
+end
+
+-- 使用率に応じた色を返す関数
+local function get_usage_color(usage_str)
+	local usage = tonumber(usage_str:match("%d+"))
+	if not usage then
+		return color_off
+	end
+	if usage >= 90 then
+		return wezterm.color.parse("#f7768e") -- 赤（危険）
+	elseif usage >= 70 then
+		return wezterm.color.parse("#e0af68") -- 黄（警告）
+	else
+		return color_on -- 緑（正常）
+	end
+end
+
+wezterm.on("update-right-status", function(window, pane)
+	-- システム情報取得
+	local mem_usage = get_memory_usage()
+	local cpu_usage = get_cpu_usage()
+	local disk_usage = get_disk_usage()
 
 	-- Time display (Gist style)
 	local time = wezterm.strftime("%-l:%M %P")
@@ -537,9 +591,21 @@ wezterm.on("update-right-status", function(window, pane)
 		{ Foreground = { Color = bg1 } },
 		{ Background = { Color = bg2 } },
 		{ Text = "" },
+		-- システム情報表示（Gist style）
+		{ Foreground = { Color = get_usage_color(mem_usage) } },
+		{ Text = " 💾 " .. mem_usage },
 		{ Foreground = { Color = title_color_bg:lighten(0.4) } },
+		{ Text = " | " },
+		{ Foreground = { Color = get_usage_color(cpu_usage) } },
+		{ Text = " 💻 " .. cpu_usage },
+		{ Foreground = { Color = title_color_bg:lighten(0.4) } },
+		{ Text = " | " },
+		{ Foreground = { Color = get_usage_color(disk_usage) } },
+		{ Text = " 💿 " .. disk_usage },
+		{ Foreground = { Color = title_color_bg:lighten(0.4) } },
+		{ Text = " | " },
 		{ Foreground = { Color = title_color_fg } },
-		{ Text = " " .. time .. " " .. bat },
+		{ Text = time .. " " },
 	}))
 end)
 

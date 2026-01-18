@@ -199,11 +199,79 @@ sync_nvim() {
     local dotfiles_root
     dotfiles_root="$(get_dotfiles_root)"
     local nvim_config="$(get_config_dir nvim)"
+    local nvim_dotfiles="$dotfiles_root/nvim"
     
     if [[ "$DIRECTION" == "push" ]]; then
-        sync_file "$dotfiles_root/nvim" "$nvim_config" "Neovim設定"
+        # dotfiles -> local: nvim/ -> ~/.config/nvim
+        if [[ "$DRY_RUN" == "true" ]]; then
+            if [[ -d "$nvim_dotfiles" ]]; then
+                log_info "[DRY RUN] Neovim設定を同期予定: $nvim_dotfiles -> $nvim_config"
+            else
+                log_warn "[DRY RUN] Neovim設定が見つかりません: $nvim_dotfiles"
+            fi
+        else
+            if [[ -d "$nvim_dotfiles" ]]; then
+                # 親ディレクトリ（~/.config）の確認
+                local config_parent
+                config_parent="$(dirname "$nvim_config")"
+                if [[ ! -d "$config_parent" ]]; then
+                    log_info "親ディレクトリを作成中: $config_parent"
+                    safe_mkdir "$config_parent" || {
+                        log_error "親ディレクトリの作成に失敗しました: $config_parent"
+                        return 1
+                    }
+                fi
+                
+                # ターゲットディレクトリの作成
+                log_info "ディレクトリを作成中: $nvim_config"
+                safe_mkdir "$nvim_config" || {
+                    log_error "ディレクトリの作成に失敗しました: $nvim_config"
+                    log_info "権限を確認してください: ls -ld $(dirname "$nvim_config")"
+                    return 1
+                }
+                
+                # ディレクトリの内容をコピー（既存のファイルは上書き）
+                log_info "ファイルをコピー中..."
+                if rsync -a --delete "$nvim_dotfiles/" "$nvim_config/" 2>/dev/null || \
+                   { cp -r "$nvim_dotfiles"/* "$nvim_config/" 2>/dev/null && \
+                     cp -r "$nvim_dotfiles"/.[!.]* "$nvim_config/" 2>/dev/null; }; then
+                    log_success "Neovim設定を同期しました"
+                else
+                    log_error "Neovim設定の同期に失敗しました"
+                    log_info "ソース: $nvim_dotfiles"
+                    log_info "ターゲット: $nvim_config"
+                    return 1
+                fi
+            else
+                log_warn "Neovim設定が見つかりません: $nvim_dotfiles"
+            fi
+        fi
     else
-        sync_file "$nvim_config" "$dotfiles_root/nvim" "Neovim設定"
+        # local -> dotfiles: ~/.config/nvim -> nvim/
+        if [[ "$DRY_RUN" == "true" ]]; then
+            if [[ -d "$nvim_config" ]]; then
+                log_info "[DRY RUN] Neovim設定を同期予定: $nvim_config -> $nvim_dotfiles"
+            else
+                log_warn "[DRY RUN] Neovim設定が見つかりません: $nvim_config"
+            fi
+        else
+            if [[ -d "$nvim_config" ]]; then
+                # ターゲットディレクトリの作成
+                safe_mkdir "$nvim_dotfiles" || return 1
+                
+                # ディレクトリの内容をコピー（既存のファイルは上書き）
+                if rsync -a --delete "$nvim_config/" "$nvim_dotfiles/" 2>/dev/null || \
+                   { cp -r "$nvim_config"/* "$nvim_dotfiles/" 2>/dev/null && \
+                     cp -r "$nvim_config"/.[!.]* "$nvim_dotfiles/" 2>/dev/null; }; then
+                    log_success "Neovim設定を同期しました"
+                else
+                    log_error "Neovim設定の同期に失敗しました"
+                    return 1
+                fi
+            else
+                log_warn "Neovim設定が見つかりません: $nvim_config"
+            fi
+        fi
     fi
 }
 

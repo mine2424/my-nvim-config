@@ -213,16 +213,60 @@ path_exists() {
 safe_mkdir() {
     local dir="$1"
     
+    # ディレクトリが既に存在する場合は成功
     if [[ -d "$dir" ]]; then
         log_debug "ディレクトリは既に存在します: $dir"
         return 0
     fi
     
+    # 壊れたシンボリックリンクのチェックと削除
+    if [[ -L "$dir" ]]; then
+        if [[ ! -e "$dir" ]]; then
+            log_warn "壊れたシンボリックリンクを削除します: $dir"
+            rm "$dir" 2>/dev/null || {
+                log_error "シンボリックリンクの削除に失敗しました: $dir"
+                return 1
+            }
+        else
+            # シンボリックリンクが有効な場合は、その先を確認
+            local target
+            target="$(readlink "$dir")"
+            if [[ -d "$target" ]]; then
+                log_debug "シンボリックリンク先のディレクトリが存在します: $target"
+                return 0
+            fi
+        fi
+    fi
+    
+    # ファイルとして存在する場合はエラー
+    if [[ -e "$dir" ]] && [[ ! -d "$dir" ]]; then
+        log_error "パスが既に存在しますが、ディレクトリではありません: $dir"
+        return 1
+    fi
+    
+    # 親ディレクトリの確認と作成
+    local parent_dir
+    parent_dir="$(dirname "$dir")"
+    if [[ ! -d "$parent_dir" ]] && [[ "$parent_dir" != "$dir" ]]; then
+        log_debug "親ディレクトリを作成中: $parent_dir"
+        if ! mkdir -p "$parent_dir" 2>/dev/null; then
+            log_error "親ディレクトリの作成に失敗しました: $parent_dir"
+            return 1
+        fi
+    fi
+    
+    # ディレクトリの作成
     if mkdir -p "$dir" 2>/dev/null; then
         log_debug "ディレクトリを作成しました: $dir"
         return 0
     else
+        # より詳細なエラー情報を取得
+        local error_msg
+        error_msg="$(mkdir -p "$dir" 2>&1)"
         log_error "ディレクトリの作成に失敗しました: $dir"
+        if [[ -n "$error_msg" ]]; then
+            log_error "エラー詳細: $error_msg"
+        fi
         return 1
     fi
 }
