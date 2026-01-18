@@ -332,19 +332,100 @@ sync_cli_tools() {
     
     local dotfiles_root
     dotfiles_root="$(get_dotfiles_root)"
+    local local_bin="$HOME/.local/bin"
     
     if [[ "$DIRECTION" == "push" ]]; then
         # dotfiles -> local
         if [[ -f "$dotfiles_root/cli-tools/gitconfig" ]]; then
             sync_file "$dotfiles_root/cli-tools/gitconfig" "$HOME/.gitconfig" "Git設定"
         fi
-        if [[ -f "$dotfiles_root/cli-tools/tmux.conf" ]]; then
-            sync_file "$dotfiles_root/cli-tools/tmux.conf" "$HOME/.tmux.conf" "tmux設定"
+        # tmux設定は tmux/.tmux.conf に配置されている
+        if [[ -f "$dotfiles_root/tmux/.tmux.conf" ]]; then
+            sync_file "$dotfiles_root/tmux/.tmux.conf" "$HOME/.tmux.conf" "tmux設定"
+        fi
+        
+        # dev と agent コマンドを ~/.local/bin に同期
+        # ディレクトリが存在しない場合は作成
+        if [[ ! -d "$local_bin" ]]; then
+            safe_mkdir "$local_bin" || {
+                log_error "ディレクトリの作成に失敗しました: $local_bin"
+                return 1
+            }
+        fi
+        
+        # devコマンド
+        if [[ -f "$dotfiles_root/scripts/dev" ]]; then
+            if [[ "$DRY_RUN" == "true" ]]; then
+                log_info "[DRY RUN] devコマンドを同期予定: $dotfiles_root/scripts/dev -> $local_bin/dev"
+            else
+                log_info "同期: devコマンド"
+                if cp "$dotfiles_root/scripts/dev" "$local_bin/dev" 2>/dev/null; then
+                    chmod +x "$local_bin/dev"
+                    log_success "同期完了: devコマンド"
+                else
+                    log_error "同期に失敗しました: devコマンド"
+                    return 1
+                fi
+            fi
+        fi
+        
+        # agentコマンド
+        if [[ -f "$dotfiles_root/scripts/agent" ]]; then
+            if [[ "$DRY_RUN" == "true" ]]; then
+                log_info "[DRY RUN] agentコマンドを同期予定: $dotfiles_root/scripts/agent -> $local_bin/agent"
+            else
+                log_info "同期: agentコマンド"
+                if cp "$dotfiles_root/scripts/agent" "$local_bin/agent" 2>/dev/null; then
+                    chmod +x "$local_bin/agent"
+                    log_success "同期完了: agentコマンド"
+                else
+                    log_error "同期に失敗しました: agentコマンド"
+                    return 1
+                fi
+            fi
         fi
     else
         # local -> dotfiles
-        sync_file "$HOME/.gitconfig" "$dotfiles_root/cli-tools/gitconfig" "Git設定"
-        sync_file "$HOME/.tmux.conf" "$dotfiles_root/cli-tools/tmux.conf" "tmux設定"
+        if [[ -f "$HOME/.gitconfig" ]]; then
+            sync_file "$HOME/.gitconfig" "$dotfiles_root/cli-tools/gitconfig" "Git設定"
+        fi
+        # tmux設定は tmux/.tmux.conf に配置されている
+        if [[ -f "$HOME/.tmux.conf" ]]; then
+            sync_file "$HOME/.tmux.conf" "$dotfiles_root/tmux/.tmux.conf" "tmux設定"
+        fi
+        
+        # dev と agent コマンドを dotfiles に同期
+        # devコマンド
+        if [[ -f "$local_bin/dev" ]]; then
+            if [[ "$DRY_RUN" == "true" ]]; then
+                log_info "[DRY RUN] devコマンドを同期予定: $local_bin/dev -> $dotfiles_root/scripts/dev"
+            else
+                log_info "同期: devコマンド"
+                if cp "$local_bin/dev" "$dotfiles_root/scripts/dev" 2>/dev/null; then
+                    chmod +x "$dotfiles_root/scripts/dev"
+                    log_success "同期完了: devコマンド"
+                else
+                    log_error "同期に失敗しました: devコマンド"
+                    return 1
+                fi
+            fi
+        fi
+        
+        # agentコマンド
+        if [[ -f "$local_bin/agent" ]]; then
+            if [[ "$DRY_RUN" == "true" ]]; then
+                log_info "[DRY RUN] agentコマンドを同期予定: $local_bin/agent -> $dotfiles_root/scripts/agent"
+            else
+                log_info "同期: agentコマンド"
+                if cp "$local_bin/agent" "$dotfiles_root/scripts/agent" 2>/dev/null; then
+                    chmod +x "$dotfiles_root/scripts/agent"
+                    log_success "同期完了: agentコマンド"
+                else
+                    log_error "同期に失敗しました: agentコマンド"
+                    return 1
+                fi
+            fi
+        fi
     fi
 }
 
@@ -446,6 +527,7 @@ confirm_sync() {
             echo "  - シェル設定（Zsh + Starship）"
             echo "  - ターミナル設定（WezTerm）"
             echo "  - CLIツール設定（Git, tmux等）"
+            echo "  - dev/agentコマンド"
             echo "  - Claude設定"
             ;;
         nvim)
@@ -459,6 +541,7 @@ confirm_sync() {
             ;;
         cli)
             echo "  - CLIツール設定（Git, tmux等）"
+            echo "  - dev/agentコマンド"
             ;;
         claude)
             echo "  - Claude設定"
