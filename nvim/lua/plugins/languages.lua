@@ -252,4 +252,165 @@ return {
       { "<leader>mp", "<cmd>MarkdownPreviewToggle<cr>", desc = "Markdown Preview" },
     },
   },
+
+  -- Markdown editing enhancements (checkboxes, links, tables, etc.)
+  {
+    "MeanderingProgrammer/markdown.nvim",
+    ft = { "markdown" },
+    dependencies = { "nvim-treesitter/nvim-treesitter" },
+    opts = {
+      -- Checkbox configuration
+      checkbox = {
+        -- Toggle checkboxes with <leader>mc
+        toggle = {
+          enable = true,
+          keymap = "<leader>mc",
+        },
+      },
+      -- Link configuration
+      link = {
+        -- Follow links with <leader>ml
+        follow = {
+          enable = true,
+          keymap = "<leader>ml",
+        },
+      },
+      -- Table configuration
+      table = {
+        -- Format tables with <leader>mt
+        format = {
+          enable = true,
+          keymap = "<leader>mt",
+        },
+      },
+    },
+    keys = {
+      { "<leader>mc", "<cmd>MarkdownCheckboxToggle<cr>", desc = "Toggle Checkbox" },
+      { "<leader>ml", "<cmd>MarkdownFollowLink<cr>", desc = "Follow Link" },
+      { "<leader>mt", "<cmd>MarkdownTableFormat<cr>", desc = "Format Table" },
+    },
+  },
+
+  -- Markdown workflow (link creation, navigation, file management)
+  {
+    "jakewvincent/mkdnflow.nvim",
+    ft = { "markdown" },
+    opts = {
+      modules = {
+        bib = true,
+        buffers = true,
+        conceal = true,
+        cursor = true,
+        folds = false,
+        links = true,
+        lists = true,
+        maps = true,
+        paths = true,
+        tables = true,
+        yaml = false,
+      },
+      file_types = { md = true, rmd = true, mdx = true },
+      create_dirs = true,
+      perspective = {
+        priority = "first",
+        fallback = "current",
+        root_tell = false,
+        nvim_wd_heel = false,
+        update = false,
+      },
+      wrap = false,
+      bib = {
+        default_path = nil,
+        find_in_root = true,
+      },
+      silent = false,
+      links = {
+        style = "markdown",
+        name_is_source = false,
+        conceal = false,
+        context = 0,
+        implicit_extension = nil,
+        transform_implicit = false,
+        transform_explicit = function(text)
+          text = text:gsub(" ", "-")
+          text = text:lower()
+          text = os.date("%Y-%m-%d_") .. text
+          return text
+        end,
+      },
+      new_file_template = {
+        use_heuristics = true,
+        extension = nil,
+        template = nil,
+        placeholders = {
+          before = {
+            date = "{{ date }}",
+            title = "{{ title }}",
+          },
+          after = {},
+        },
+        date_format = "%Y-%m-%d",
+        use_template = false,
+      },
+      to_do = {
+        symbols = { " ", "-", "X" },
+        update_parents = true,
+        not_started = " ",
+        in_progress = "-",
+        complete = "X",
+      },
+      tables = {
+        trim_whitespace = true,
+        format_on_move = true,
+        auto_extend_rows = false,
+        auto_extend_cols = false,
+      },
+      yaml = {
+        bib = { override = false },
+      },
+      mappings = {
+        MkdnEnter = { { "n", "v" }, "<CR>" },
+        MkdnTab = false,
+        MkdnSTab = false,
+        MkdnNextLink = { "n", "<Tab>" },
+        MkdnPrevLink = { "n", "<S-Tab>" },
+        MkdnNextHeading = { "n", "]]" },
+        MkdnPrevHeading = { "n", "[[" },
+        MkdnGoBack = { "n", "<BS>" },
+        MkdnGoForward = { "n", "<Del>" },
+        MkdnCreateLink = false, -- see note below
+        MkdnCreateLinkFromClipboard = { { "n", "v" }, "<leader>p" }, -- see note below
+        MkdnFollowLink = false, -- see note below
+        MkdnDestroyLink = { "n", "<M-CR>" },
+        MkdnTagSpan = { "v", "<M-CR>" },
+        MkdnMoveSource = { "n", "<F2>" },
+        MkdnYankFileAnchor = { "n", "<leader>y" },
+        MkdnIncreaseHeading = { "n", "+" },
+        MkdnDecreaseHeading = { "n", "-" },
+        MkdnToggleToDo = { { "n", "v" }, "<C-Space>" },
+        MkdnNewListItem = false,
+        MkdnNewListItemBelowInsert = { "n", "o" },
+        MkdnNewListItemAboveInsert = { "n", "O" },
+        MkdnExtendList = false,
+        MkdnUpdateNumbering = { "n", "<leader>nn" },
+        MkdnTableNextCell = { "i", "<Tab>" },
+        MkdnTablePrevCell = { "i", "<S-Tab>" },
+        MkdnTableNextRow = false,
+        MkdnTablePrevRow = { "i", "<M-CR>" },
+        MkdnTableNewRowBelow = { "n", "<leader>ir" },
+        MkdnTableNewRowAbove = { "n", "<leader>iR" },
+        MkdnTableNewColAfter = { "n", "<leader>ic" },
+        MkdnTableNewColBefore = { "n", "<leader>iC" },
+        MkdnFoldSection = { "n", "<leader>f" },
+        MkdnUnfoldSection = { "n", "<leader>F" },
+      },
+    },
+    keys = {
+      { "<leader>p", "<cmd>MkdnCreateLinkFromClipboard<cr>", desc = "Create Link from Clipboard", mode = { "n", "v" } },
+      { "<leader>y", "<cmd>MkdnYankFileAnchor<cr>", desc = "Yank File Anchor" },
+      { "<leader>nn", "<cmd>MkdnUpdateNumbering<cr>", desc = "Update Numbering" },
+      { "<leader>f", "<cmd>MkdnFoldSection<cr>", desc = "Fold Section" },
+      { "<leader>F", "<cmd>MkdnUnfoldSection<cr>", desc = "Unfold Section" },
+    },
+  },
 }
