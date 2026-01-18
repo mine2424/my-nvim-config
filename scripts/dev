@@ -190,24 +190,25 @@ create_dev_layout() {
   # -c: 作業ディレクトリを指定
   tmux new-session -d -s "$session" -n "editor" -c "$dir"
   
-  # ステップ2: 左側でNeovimを起動（先に起動してから分割する）
-  # これにより、Neovimが左側に確実に配置されます
-  tmux send-keys -t "$session:editor" "nvim" C-m
-  
-  # ステップ3: 右側に縦分割（50%: 左半分と右半分）
+  # ステップ2: 右側に縦分割（50%: 左半分と右半分）
   # -h: 縦分割（horizontal split、左右に分割）
   # -p 50: 右側を50%にする（左50%、右50%）
-  # 結果: ペイン0（左、Neovim）、ペイン1（右）が作成される
-  tmux split-window -t "$session:editor" -h -p 50 -c "$dir"
+  # 結果: ペイン0（左）、ペイン1（右）が作成される
+  tmux split-window -t "$session:editor.0" -h -p 50 -c "$dir"
   
-  # ステップ4: 右ペイン（ペイン1）を横分割（上50%: ターミナル、下50%: ターミナル）
+  # ステップ3: 右ペイン（ペイン1）を横分割（上50%: ターミナル、下50%: ターミナル）
   # -v: 横分割（vertical split、上下に分割）
   # -p 50: 下側を50%にする
   # 結果: ペイン1（右上）、ペイン2（右下）が作成される
   tmux split-window -t "$session:editor.1" -v -p 50 -c "$dir"
   
-  # ステップ5: 左側のペイン（ペイン0、Neovim）にフォーカス
+  # ステップ4: 左側のペイン（ペイン0）にフォーカス
   tmux select-pane -t "$session:editor.0"
+  
+  # ステップ5: 左側のペイン（ペイン0）でNeovimを起動
+  # 分割が完了してからNeovimを起動することで、確実に左側に配置される
+  sleep 0.1  # 分割完了を待つ
+  tmux send-keys -t "$session:editor.0" "nvim" C-m
   
   echo ""
   echo "💡 devレイアウト作成完了"
