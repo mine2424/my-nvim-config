@@ -2,7 +2,7 @@
 # setup.sh - メインセットアップスクリプト
 # dotfilesの設定を適用し、必要なツールをインストール
 
-set -euo pipefail
+set -uo pipefail
 
 # スクリプトのディレクトリを取得
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -430,17 +430,37 @@ setup_shell() {
     fi
 
     # Starship設定
-    local starship_src="$dotfiles_root/starship"
-    local starship_dest="$(get_config_dir)"
+    local starship_config_src="$dotfiles_root/starship/.config/starship.toml"
+    local starship_config_dest="$HOME/.config/starship.toml"
 
-    if [[ -d "$starship_src" ]]; then
+    if [[ -f "$starship_config_src" ]]; then
         if [[ "$DRY_RUN" == "true" ]]; then
-            log_info "[DRY RUN] Starship設定を適用: $starship_src -> $starship_dest"
+            log_info "[DRY RUN] Starship設定を適用: $starship_config_src -> $starship_config_dest"
         else
-            if safe_symlink "$starship_src" "$starship_dest" "$CREATE_BACKUP"; then
+            # 既存設定のバックアップ
+            if [[ -e "$starship_config_dest" ]]; then
+                if [[ "$CREATE_BACKUP" == "true" ]]; then
+                    local backup_path="${starship_config_dest}.backup.$(date +%Y%m%d_%H%M%S)"
+                    log_info "既存設定をバックアップ: $starship_config_dest -> $backup_path"
+                    mv "$starship_config_dest" "$backup_path"
+                else
+                    log_warn "既存設定を削除: $starship_config_dest"
+                    rm -rf "$starship_config_dest"
+                fi
+            fi
+
+            # ファイルをコピー
+            if cp "$starship_config_src" "$starship_config_dest" 2>/dev/null; then
                 log_success "Starship設定を適用しました"
+            else
+                log_error "Starship設定の適用に失敗しました"
+                log_error "ソース: $starship_config_src"
+                log_error "ターゲット: $starship_config_dest"
+                return 1
             fi
         fi
+    else
+        log_warn "Starship設定が見つかりません: $starship_config_src"
     fi
 }
 
