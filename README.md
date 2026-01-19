@@ -2,29 +2,29 @@
 
 <div align="center">
 
-**🚀 Neovim + Tmux + Claude Code 並列開発環境**
+**🚀 Neovim + Zellij + Claude Code 並列開発環境**
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Platform](https://img.shields.io/badge/Platform-macOS%20%7C%20Linux%20%7C%20Windows-lightgrey)]()
 
-モダンで快適な開発環境を数分でセットアップ。  
+モダンで快適な開発環境を数分でセットアップ。
 15言語対応、統合ナビゲーション、AI開発との完璧な併用。
 
 [クイックスタート](#-クイックスタート) • [機能](#-主な機能) • [ドキュメント](#-ドキュメント)
-
 </div>
 
 ---
 
 ## 🎯 概要
 
-このdotfilesプロジェクトは、Neovim + Tmux + Claude Codeを統合した並列開発環境を提供します。
+このdotfilesプロジェクトは、Neovim + Zellij + Claude Codeを統合した並列開発環境を提供します。
 
 | カテゴリ | ツール | 説明 |
 |---------|--------|------|
 | **エディタ** | [Neovim](https://neovim.io/) + [lazy.nvim](https://github.com/folke/lazy.nvim) | モダンなNeovim設定（LSP、15言語対応） |
-| **マルチプレクサ** | [Tmux](https://github.com/tmux/tmux) | セッション管理、ペイン分割 |
-| **ターミナル** | [WezTerm](https://wezfurlong.org/wezterm/) | GPU加速、統合ナビゲーション |
+| **マルチプレクサ** | [Zellij](https://zellij.dev/) + [Tmux](https://github.com/tmux/tmux) | ターミナルワークスペース、セッション管理 |
+| **ターミナル** | [Ghostty](https://ghostty.org/) + [WezTerm](https://wezfurlong.org/wezterm/) | 高速ターミナル、GPU加速、統合ナビゲーション |
+| **AI開発** | [OpenCode](https://opencode.ai/) + [Z.AI](https://z.ai/) | GLMモデルを使用したAIコーディングエージェント |
 | **AI開発** | [Cursor](https://cursor.sh/) | Claude Code併用ワークフロー |
 | **シェル** | [Zsh](https://www.zsh.org/) + [Starship](https://starship.rs/) | 高速で美しいシェル環境 |
 | **フォント** | [Moralerspace](https://github.com/yuru7/moralerspace) | プログラミング向け日英混植フォント |
@@ -54,10 +54,11 @@
 - **自動フォーマット**: 保存時に自動フォーマット
 - **Linter統合**: リアルタイムコード検証
 
-### 🤖 Claude Code併用
-- **明確な使い分け**: Neovim（設定・スクリプト）、Claude Code（新機能開発）
+### 🤖 AI開発支援
+- **OpenCode + Z.AI**: GLMモデルを使用したAIコーディングエージェント
+- **Claude Code併用**: Neovim（設定・スクリプト）、Claude Code（新機能開発）
 - **最適化レイアウト**: Git + Terminal統合
-- **devコマンド**: 一発起動
+- **dev/ocdevコマンド**: 一発起動
 
 ### 🔧 簡単な管理
 - **自動セットアップ**: ワンコマンドでインストール
@@ -103,12 +104,18 @@ dotfiles/
 │           └── linter.lua                   # Linter
 ├── tmux/                                    # 🖥️ Tmux設定
 │   └── .tmux.conf                           # Tokyo Night、vim-tmux-navigator統合
+├── zellij/                                   # 🖥️ Zellij設定
+│   ├── config.kdl                           # Tokyo Night、Ghosttyキー衝突回避
+│   └── layouts/                             # カスタムレイアウト
+├── ghostty/                                  # 🖥️ Ghostty設定
+│   └── config                               # Tokyo Night、Alt+Superキーバインド
 ├── wezterm/.config/wezterm/                 # 🖥️ WezTerm設定
 │   └── wezterm.lua                          # OS別キーバインド、カラー統合
 ├── zsh/                                     # 🐚 Zsh設定
 │   ├── zshrc                                # メイン設定
 │   ├── zshenv                               # 環境変数
 │   ├── zprofile                             # PATH設定
+│   ├── zshrc.local                          # Zellij自動起動
 │   └── sheldon/plugins.toml                 # プラグイン管理
 ├── starship/.config/                        # ⭐ Starship設定
 │   └── starship.toml                        # プロンプト設定
@@ -125,8 +132,10 @@ dotfiles/
 | ✅ | Git | バージョン管理 |
 | ✅ | Bash/Zsh | シェル |
 | ✅ | インターネット接続 | パッケージダウンロード |
+| ✅ | [Z.AI APIキー](https://console.z.ai/) | OpenCode使用に必要 |
 | 推奨 | [Nerd Font](https://www.nerdfonts.com/) | アイコン表示（JetBrains Mono推奨） |
-| 推奨 | [WezTerm](https://wezfurlong.org/wezterm/) | ターミナルエミュレータ |
+| 推奨 | [Ghostty](https://ghostty.org/) | 高速ターミナル（macOS） |
+| 推奨 | [WezTerm](https://wezfurlong.org/wezterm/) | ターミナルエミュレータ（クロスプラットフォーム） |
 
 ### インストール
 
@@ -135,25 +144,32 @@ dotfiles/
 git clone https://github.com/your-repo/dotfiles.git ~/development/dotfiles
 cd ~/development/dotfiles
 
-# 2. Neovim + Tmux自動セットアップ（推奨）
+# 2. Neovim + Zellij + OpenCode自動セットアップ（推奨）
 ./scripts/install-neovim-tmux.sh
 
 # 3. シェルを再起動
 exec $SHELL
 
-# 4. 開発環境を起動
-dev
+# 4. OpenCodeを認証（初回のみ）
+opencode auth login
+# Z.AIを選択し、APIキーを入力
 
-# 5. Neovimでhealth checkを実行
+# 5. 開発環境を起動
+dev          # Neovim + Zellij
+# または
+ocdev        # OpenCode + 開発環境
+
+# 6. Neovimでhealth checkを実行
 nvim
 :checkhealth
 ```
 
 ### 初回起動時の流れ
 
-1. **Neovim起動**: lazy.nvimが自動的にプラグインをインストール（数分）
-2. **LSPサーバー**: `:Mason`で必要な言語のLSPサーバーをインストール
-3. **Tmuxプラグイン**: `Prefix (Ctrl+A) + I`でプラグインをインストール
+1. **OpenCode認証**: `opencode auth login` でZ.AI APIキーを設定
+2. **Neovim起動**: lazy.nvimが自動的にプラグインをインストール（数分）
+3. **LSPサーバー**: `:Mason`で必要な言語のLSPサーバーをインストール
+4. **Tmuxプラグイン**: `Prefix (Ctrl+A) + I`でプラグインをインストール
 
 ## 🎮 使い方
 
@@ -162,7 +178,7 @@ nvim
 `dev`コマンドでNeovim + Tmuxを一発で起動できます。
 
 ```bash
-# 基本起動（claudeレイアウトがデフォルト）
+# 基本起動（devレイアウトがデフォルト）
 dev
 
 # セッション名を指定
@@ -171,13 +187,34 @@ dev myproject
 # ディレクトリを指定
 dev myproject ~/code/myapp
 
-# レイアウトを指定
-dev --layout claude    # Claude Code併用（デフォルト）
-dev --layout split     # エディタ + ターミナル分割
-dev --layout full      # フルスクリーン
-
 # ヘルプ表示
 dev --help
+```
+
+### ocdevコマンド
+
+`ocdev`コマンドでOpenCode + 開発環境を一発で起動できます。
+
+```bash
+# 基本起動（OpenCode + Terminal）
+ocdev
+
+# セッション名を指定
+ocdev myproject
+
+# ディレクトリを指定
+ocdev myproject ~/code/myapp
+
+# モデルを指定
+ocdev --model GLM-4.7
+
+# レイアウトを指定
+ocdev --layout default  # 左右分割（デフォルト）
+ocdev --layout split    # 上下分割
+ocdev --layout full     # フルスクリーン
+
+# ヘルプ表示
+ocdev --help
 ```
 
 ### レイアウト
@@ -211,10 +248,32 @@ dev --help
 └─────────────────┘
 ```
 
+### OpenCode + Z.AI ワークフロー
+
+```bash
+# 1. OpenCodeを認証（初回のみ）
+opencode auth login
+# またはエイリアス: ocl
+
+# 2. OpenCode + 開発環境を起動
+ocdev myproject
+
+# 3. 作業開始
+# - 左（OpenCode）: AI支援によるコード生成、リファクタリング、質問
+# - 右（Terminal）: テスト実行、ビルド、コマンド実行
+
+# 便利なエイリアス
+oc              # OpenCodeを起動
+ocq GLM-4.7     # モデルを指定して起動
+ocf src/main.rs # ファイルコンテキスト付きで起動
+```
+
+詳細は [docs/opencode-setup.md](docs/opencode-setup.md) を参照してください。
+
 ### Claude Code併用ワークフロー
 
 ```bash
-# 1. Neovim + Tmuxを起動（claudeレイアウト）
+# 1. Neovim + Tmuxを起動（devレイアウト）
 dev
 
 # 2. Claude Codeを起動
@@ -440,6 +499,8 @@ git commit -m "Update configurations from local"
 |-------------|------|------|
 | [要件定義](docs/requirements/neovim-tmux-claude-parallel-dev.md) | 完全な要件と設計 | 3,700行 |
 | [キーバインディング](docs/keybindings.md) | 全キーバインド一覧 | 1,000行 |
+| [Zellijガイド](docs/zellij-guide.md) | Zellij設定・キーバインド・Ghostty互換 | - |
+| [OpenCodeセットアップ](docs/opencode-setup.md) | OpenCode + Z.AIセットアップガイド | - |
 | [カラースキーム統合](docs/colorscheme-integration.md) | 色の設定ガイド | - |
 | [セットアップガイド](docs/setup-guide-neovim-tmux.md) | インストール手順 | - |
 | [実装サマリー](docs/implementation-summary.md) | 実装内容の概要 | - |
@@ -456,6 +517,9 @@ git commit -m "Update configurations from local"
 | `nvim/lua/config/keymaps.lua` | キーマッピング |
 | `nvim/lua/plugins/*.lua` | プラグイン設定 |
 | `tmux/.tmux.conf` | Tmux設定 |
+| `zellij/config.kdl` | Zellij設定 |
+| `zellij/layouts/` | Zellijレイアウト |
+| `ghostty/config` | Ghostty設定 |
 | `wezterm/.config/wezterm/wezterm.lua` | WezTerm設定 |
 | `zsh/zshrc` | シェル設定 |
 | `starship/.config/starship.toml` | プロンプト設定 |
@@ -482,8 +546,10 @@ git commit -m "Update Neovim options"
 
 | スクリプト | 説明 |
 |-----------|------|
-| `install-neovim-tmux.sh` | Neovim + Tmux自動セットアップ |
+| `install-neovim-tmux.sh` | Neovim + Tmux + OpenCode自動セットアップ |
 | `dev` | Neovim + Tmuxクイック起動 |
+| `ocdev` | OpenCode + 開発環境クイック起動 |
+| `agent` | 5分割レイアウト起動 |
 | `sync.sh` | 双方向同期（push/pull） |
 | `clean.sh` | クリーニング（バックアップ付き） |
 | `restore.sh` | 復元（バックアップから） |
@@ -589,6 +655,8 @@ MIT License - 詳細は [LICENSE](LICENSE) ファイルを参照してくださ�
 - [Tokyo Night](https://github.com/folke/tokyonight.nvim) - カラースキーム
 - [Starship](https://starship.rs/) - クロスシェルプロンプト
 - [Moralerspace](https://github.com/yuru7/moralerspace) - プログラミングフォント
+- [OpenCode](https://opencode.ai/) - AIコーディングエージェント
+- [Z.AI](https://z.ai/) - GLMモデルプロバイダー
 
 ---
 

@@ -203,7 +203,19 @@ install_dependencies_macos() {
     
     case "$COMPONENT" in
         all|nvim)
-            packages+=("neovim" "ripgrep" "fd" "lazygit")
+            packages+=("neovim" "ripgrep" "fd" "lazygit" "imagemagick" "tectonic" "luarocks")
+            ;;
+    esac
+
+    case "$COMPONENT" in
+        all|terminal)
+            packages+=("--cask wezterm" "--cask ghostty")
+            ;;
+    esac
+
+    case "$COMPONENT" in
+        all|cli)
+            packages+=("git" "tmux" "zellij" "fzf" "bat" "eza")
             ;;
     esac
     
@@ -221,12 +233,22 @@ install_dependencies_macos() {
     
     case "$COMPONENT" in
         all|cli)
-            packages+=("git" "tmux" "fzf" "bat" "eza")
+            packages+=("git" "tmux" "zellij" "fzf" "bat" "eza")
             ;;
     esac
     
     if [[ ${#packages[@]} -gt 0 ]]; then
         brew install "${packages[@]}" || log_warn "一部のパッケージのインストールに失敗しました"
+    fi
+    
+    # npmツールのインストール
+    if check_command npm; then
+        case "$COMPONENT" in
+            all|nvim)
+                log_info "npmツールをインストールしています..."
+                npm install -g tree-sitter-cli @mermaid-js/mermaid-cli || log_warn "一部のnpmツールのインストールに失敗しました"
+                ;;
+        esac
     fi
     
     log_success "依存関係のインストールが完了しました"
@@ -281,7 +303,7 @@ install_dependencies_debian() {
     
     case "$COMPONENT" in
         all|cli)
-            packages+=("git" "tmux" "fzf")
+            packages+=("git" "tmux" "zellij" "fzf")
             ;;
     esac
     
@@ -361,14 +383,14 @@ setup_nvim() {
 #######################################
 setup_shell() {
     log_section "シェル設定の適用"
-    
+
     local dotfiles_root
     dotfiles_root="$(get_dotfiles_root)"
-    
+
     # Zsh設定
     local zshrc_src="$dotfiles_root/zsh/zshrc"
     local zshrc_dest="$HOME/.zshrc"
-    
+
     if [[ -f "$zshrc_src" ]]; then
         if [[ "$DRY_RUN" == "true" ]]; then
             log_info "[DRY RUN] Zsh設定を適用: $zshrc_src -> $zshrc_dest"
@@ -378,11 +400,25 @@ setup_shell() {
             fi
         fi
     fi
-    
+
+    # Zshローカル設定（zellij auto-start等）
+    local zshrc_local_src="$dotfiles_root/zsh/zshrc.local"
+    local zshrc_local_dest="$HOME/.zshrc.local"
+
+    if [[ -f "$zshrc_local_src" ]]; then
+        if [[ "$DRY_RUN" == "true" ]]; then
+            log_info "[DRY RUN] Zshローカル設定を適用: $zshrc_local_src -> $zshrc_local_dest"
+        else
+            if safe_symlink "$zshrc_local_src" "$zshrc_local_dest" "$CREATE_BACKUP"; then
+                log_success "Zshローカル設定を適用しました"
+            fi
+        fi
+    fi
+
     # Sheldon設定
     local sheldon_src="$dotfiles_root/zsh/sheldon"
     local sheldon_dest="$(get_config_dir sheldon)"
-    
+
     if [[ -d "$sheldon_src" ]]; then
         if [[ "$DRY_RUN" == "true" ]]; then
             log_info "[DRY RUN] Sheldon設定を適用: $sheldon_src -> $sheldon_dest"
@@ -392,11 +428,11 @@ setup_shell() {
             fi
         fi
     fi
-    
+
     # Starship設定
     local starship_src="$dotfiles_root/starship"
     local starship_dest="$(get_config_dir)"
-    
+
     if [[ -d "$starship_src" ]]; then
         if [[ "$DRY_RUN" == "true" ]]; then
             log_info "[DRY RUN] Starship設定を適用予定"
@@ -411,22 +447,36 @@ setup_shell() {
 #######################################
 setup_terminal() {
     log_section "ターミナル設定の適用"
-    
+
     local dotfiles_root
     dotfiles_root="$(get_dotfiles_root)"
-    
+
     # WezTerm設定
     local wezterm_src="$dotfiles_root/wezterm"
     local wezterm_dest="$(get_config_dir wezterm)"
-    
+
     if [[ -d "$wezterm_src" ]]; then
         if [[ "$DRY_RUN" == "true" ]]; then
-            log_info "[DRY RUN] WezTerm設定を適用予定"
+            log_info "[DRY RUN] WezTerm設定を適用: $wezterm_src -> $wezterm_dest"
         else
-            log_info "WezTerm設定は後で実装します"
+            if safe_symlink "$wezterm_src" "$wezterm_dest" "$CREATE_BACKUP"; then
+                log_success "WezTerm設定を適用しました"
+            fi
         fi
-    else
-        log_info "WezTerm設定は後で実装します"
+    fi
+
+    # Ghostty設定
+    local ghostty_src="$dotfiles_root/ghostty"
+    local ghostty_dest="$(get_config_dir ghostty)"
+
+    if [[ -d "$ghostty_src" ]]; then
+        if [[ "$DRY_RUN" == "true" ]]; then
+            log_info "[DRY RUN] Ghostty設定を適用: $ghostty_src -> $ghostty_dest"
+        else
+            if safe_symlink "$ghostty_src" "$ghostty_dest" "$CREATE_BACKUP"; then
+                log_success "Ghostty設定を適用しました"
+            fi
+        fi
     fi
 }
 
@@ -435,11 +485,68 @@ setup_terminal() {
 #######################################
 setup_cli_tools() {
     log_section "CLIツール設定の適用"
-    
+
     local dotfiles_root
     dotfiles_root="$(get_dotfiles_root)"
-    
-    log_info "CLIツール設定は後で実装します"
+
+    # Zellij設定
+    local zellij_src="$dotfiles_root/zellij"
+    local zellij_dest="$(get_config_dir zellij)"
+
+    if [[ -d "$zellij_src" ]]; then
+        if [[ "$DRY_RUN" == "true" ]]; then
+            log_info "[DRY RUN] Zellij設定を適用: $zellij_src -> $zellij_dest"
+        else
+            # Zellij設定はディレクトリをコピー（シンボリックリンクではなく）
+            if [[ -e "$zellij_dest" ]] || [[ -L "$zellij_dest" ]]; then
+                if [[ "$CREATE_BACKUP" == "true" ]]; then
+                    local backup_path="${zellij_dest}.backup.$(date +%Y%m%d_%H%M%S)"
+                    log_info "既存設定をバックアップ: $zellij_dest -> $backup_path"
+                    rm -rf "$backup_path" 2>/dev/null
+                    mv "$zellij_dest" "$backup_path"
+                else
+                    log_warn "既存設定を削除: $zellij_dest"
+                    rm -rf "$zellij_dest"
+                fi
+            fi
+
+            # ディレクトリをコピー
+            if cp -r "$zellij_src" "$zellij_dest" 2>/dev/null; then
+                log_success "Zellij設定を適用しました"
+            else
+                log_error "Zellij設定の適用に失敗しました"
+                return 1
+            fi
+        fi
+    fi
+
+    # Tmux設定
+    local tmux_src="$dotfiles_root/tmux"
+    local tmux_dest="$HOME/.tmux"
+
+    if [[ -d "$tmux_src" ]]; then
+        if [[ "$DRY_RUN" == "true" ]]; then
+            log_info "[DRY RUN] Tmux設定を適用: $tmux_src -> $tmux_dest"
+        else
+            if safe_symlink "$tmux_src" "$tmux_dest" "$CREATE_BACKUP"; then
+                log_success "Tmux設定を適用しました"
+            fi
+        fi
+    fi
+
+    # Git設定
+    local gitconfig_src="$dotfiles_root/.gitconfig"
+    local gitconfig_dest="$HOME/.gitconfig"
+
+    if [[ -f "$gitconfig_src" ]]; then
+        if [[ "$DRY_RUN" == "true" ]]; then
+            log_info "[DRY RUN] Git設定を適用: $gitconfig_src -> $gitconfig_dest"
+        else
+            if safe_symlink "$gitconfig_src" "$gitconfig_dest" "$CREATE_BACKUP"; then
+                log_success "Git設定を適用しました"
+            fi
+        fi
+    fi
 }
 
 #######################################
@@ -520,8 +627,8 @@ confirm_setup() {
         all)
             echo "  - Neovim設定"
             echo "  - シェル設定（Zsh + Starship）"
-            echo "  - ターミナル設定（WezTerm）"
-            echo "  - CLIツール設定（Git, tmux等）"
+            echo "  - ターミナル設定（WezTerm + Ghostty）"
+            echo "  - CLIツール設定（Git, tmux, Zellij等）"
             echo "  - Claude設定"
             ;;
         nvim)
@@ -531,10 +638,10 @@ confirm_setup() {
             echo "  - シェル設定（Zsh + Starship）"
             ;;
         terminal)
-            echo "  - ターミナル設定（WezTerm）"
+            echo "  - ターミナル設定（WezTerm + Ghostty）"
             ;;
         cli)
-            echo "  - CLIツール設定（Git, tmux等）"
+            echo "  - CLIツール設定（Git, tmux, Zellij等）"
             ;;
         claude)
             echo "  - Claude設定"
