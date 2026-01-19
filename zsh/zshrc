@@ -263,6 +263,16 @@ alias cl='claude'
 alias cld='claude --dangerously-skip-permissions'
 alias rcl='claude --resume'
 
+# OpenCode
+if command -v opencode &> /dev/null; then
+    alias oc='opencode'
+    alias oca='opencode auth'
+    alias ocl='opencode auth login'
+    alias ocm='opencode models'
+    alias ocs='opencode share'
+    alias ocus='opencode unshare'
+fi
+
 # Utility
 alias reload='exec zsh'
 alias myip='curl -s https://api.ipify.org && echo'
@@ -347,6 +357,50 @@ fkill() {
     fi
 }
 
+# OpenCode helper functions
+if command -v opencode &> /dev/null; then
+    # Quick OpenCode session with model selection
+    ocq() {
+        local model="${1:-GLM-4.7}"
+        opencode --model "$model" "${@:2}"
+    }
+    
+    # OpenCode with file context
+    ocf() {
+        if [[ -z "$1" ]]; then
+            echo "Usage: ocf <file> [additional args]"
+            echo "Example: ocf src/main.rs 'explain this code'"
+            return 1
+        fi
+        opencode --file "$1" "${@:2}"
+    }
+    
+    # OpenCode GitHub workflow helper
+    ocgh() {
+        if [[ ! -d .git ]]; then
+            echo "Error: Not a git repository"
+            return 1
+        fi
+        if [[ -z "$1" ]]; then
+            echo "Usage: ocgh <command>"
+            echo "Commands:"
+            echo "  install  - Install OpenCode GitHub workflow"
+            echo "  explain  - Explain current issue (use in GitHub issue)"
+            echo "  fix      - Fix current issue (use in GitHub issue)"
+            return 1
+        fi
+        case "$1" in
+            install)
+                opencode github install
+                ;;
+            *)
+                echo "Unknown command: $1"
+                return 1
+                ;;
+        esac
+    }
+fi
+
 # ========================================
 # FZF Configuration
 # ========================================
@@ -399,3 +453,8 @@ fi
 # ========================================
 # Uncomment to show profiling results
 # zprof
+
+# OpenCode
+if [[ -d "$HOME/.opencode/bin" ]]; then
+    export PATH="$HOME/.opencode/bin:$PATH"
+fi

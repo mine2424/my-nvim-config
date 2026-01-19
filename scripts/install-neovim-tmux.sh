@@ -145,6 +145,41 @@ install_tmux() {
 }
 
 # ========================================
+# Install OpenCode
+# ========================================
+
+install_opencode() {
+  log_info "Installing OpenCode..."
+  
+  if command_exists opencode; then
+    local version=$(opencode --version 2>/dev/null || echo "installed")
+    log_warn "OpenCode is already installed: $version"
+    return 0
+  fi
+  
+  # Install via install script (recommended)
+  log_info "Downloading and installing OpenCode..."
+  if curl -fsSL https://opencode.ai/install | bash; then
+    log_success "OpenCode installed successfully"
+    
+    # Add to PATH if not already there
+    if [[ ":$PATH:" != *":$HOME/.opencode/bin:"* ]]; then
+      log_info "Adding OpenCode to PATH..."
+      if [[ -f ~/.zshrc ]]; then
+        if ! grep -q "\.opencode/bin" ~/.zshrc; then
+          echo 'export PATH="$HOME/.opencode/bin:$PATH"' >> ~/.zshrc
+          log_success "OpenCode PATH added to ~/.zshrc"
+        fi
+      fi
+    fi
+  else
+    log_error "Failed to install OpenCode"
+    log_info "You can also install via npm: npm install -g opencode-ai"
+    return 1
+  fi
+}
+
+# ========================================
 # Install Required Tools
 # ========================================
 
@@ -163,20 +198,26 @@ install_tools() {
         done
         
         # Optional tools
-        brew install lazygit git-delta bat eza 2>/dev/null || true
+        brew install lazygit git-delta bat eza imagemagick tectonic luarocks 2>/dev/null || true
       fi
       ;;
     linux)
       if command_exists apt-get; then
         sudo apt-get update
-        sudo apt-get install -y ripgrep fd-find fzf
+        sudo apt-get install -y ripgrep fd-find fzf imagemagick luarocks
       elif command_exists dnf; then
-        sudo dnf install -y ripgrep fd-find fzf
+        sudo dnf install -y ripgrep fd-find fzf imagemagick luarocks
       elif command_exists pacman; then
-        sudo pacman -S --noconfirm ripgrep fd fzf
+        sudo pacman -S --noconfirm ripgrep fd fzf imagemagick luarocks
       fi
       ;;
   esac
+  
+  # Install npm tools
+  if command_exists npm; then
+    log_info "Installing npm tools..."
+    npm install -g tree-sitter-cli @mermaid-js/mermaid-cli 2>/dev/null || log_warn "Some npm tools failed to install"
+  fi
   
   log_success "Required tools installed"
 }
@@ -228,15 +269,31 @@ setup_tmux_config() {
 }
 
 # ========================================
-# Install dev command
+# Install dev commands
 # ========================================
 
-install_dev_command() {
-  log_info "Installing dev command..."
+install_dev_commands() {
+  log_info "Installing dev commands..."
   
   mkdir -p ~/.local/bin
+  
+  # Install dev command
   cp "$DOTFILES_DIR/scripts/dev" ~/.local/bin/dev
   chmod +x ~/.local/bin/dev
+  
+  # Install ocdev command
+  if [ -f "$DOTFILES_DIR/scripts/ocdev" ]; then
+    cp "$DOTFILES_DIR/scripts/ocdev" ~/.local/bin/ocdev
+    chmod +x ~/.local/bin/ocdev
+    log_success "ocdev command installed"
+  fi
+  
+  # Install agent command
+  if [ -f "$DOTFILES_DIR/scripts/agent" ]; then
+    cp "$DOTFILES_DIR/scripts/agent" ~/.local/bin/agent
+    chmod +x ~/.local/bin/agent
+    log_success "agent command installed"
+  fi
   
   # Check if ~/.local/bin is in PATH
   if [[ ":$PATH:" != *":$HOME/.local/bin:"* ]]; then
@@ -245,7 +302,7 @@ install_dev_command() {
     echo '  export PATH="$HOME/.local/bin:$PATH"'
   fi
   
-  log_success "dev command installed"
+  log_success "dev commands installed"
 }
 
 # ========================================
@@ -296,6 +353,7 @@ main() {
   install_neovim
   install_tmux
   install_tools
+  install_opencode
   
   echo ""
   log_info "Setting up configurations..."
@@ -303,7 +361,7 @@ main() {
   # Setup configs
   setup_neovim_config
   setup_tmux_config
-  install_dev_command
+  install_dev_commands
   
   echo ""
   log_info "Installing plugins..."
@@ -319,19 +377,24 @@ main() {
   echo ""
   echo "Next steps:"
   echo "  1. Restart your terminal or run: exec \$SHELL"
-  echo "  2. Open Neovim and run: :checkhealth"
-  echo "  3. Start Tmux and press Prefix (Ctrl+A) + I to install plugins"
-  echo "  4. Try the dev command: dev --help"
+  echo "  2. Set up OpenCode authentication:"
+  echo "     opencode auth login"
+  echo "     (Select Z.AI and enter your API key)"
+  echo "  3. Open Neovim and run: :checkhealth"
+  echo "  4. Start Tmux and press Prefix (Ctrl+A) + I to install plugins"
+  echo "  5. Try the dev command: dev --help"
   echo ""
   echo "Key bindings:"
   echo "  - Neovim: Space (Leader)"
   echo "  - Tmux: Ctrl+A (Prefix)"
   echo "  - Navigation: Ctrl+h/j/k/l (works across all layers)"
+  echo "  - OpenCode: oc (alias), /models to select model"
   echo ""
   echo "Documentation:"
   echo "  - Keybindings: docs/keybindings.md"
   echo "  - Requirements: docs/requirements/neovim-tmux-claude-parallel-dev.md"
   echo "  - Colorscheme: docs/colorscheme-integration.md"
+  echo "  - OpenCode: docs/opencode-setup.md"
   echo ""
 }
 

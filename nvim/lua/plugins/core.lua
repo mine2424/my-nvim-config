@@ -14,4 +14,65 @@ return {
       end,
     },
   },
+
+  {
+    "folke/snacks.nvim",
+    priority = 1000,
+    lazy = false,
+    opts = {
+      bigfile = { enabled = true },
+      notifier = { enabled = true },
+      quickfile = { enabled = true },
+      words = { enabled = true },
+      styles = {
+        notification = {
+          wo = { wrap = false },
+        },
+      },
+      dashboard = {
+        enabled = true,
+        preset = {
+          header = [[
+██╗   ██╗██╗███████╗██╗  ██╗██╗   ██╗
+╚██╗ ██╔╝██║██╔════╝╚██╗██╔╝╚██╗ ██╔╝
+ ╚████╔╝ ██║█████╗   ╚███╔╝  ╚████╔╝
+  ╚██╔╝  ██║██╔══╝   ██╔██╗   ╚██╔╝
+   ██║   ██║███████╗██╔╝ ██╗   ██║
+   ╚═╝   ╚═╝╚══════╝╚═╝  ╚═╝   ╚═╝
+          ]],
+        },
+      },
+      indent = { enabled = true },
+      input = { enabled = true },
+      notifier = { enabled = true },
+      scroll = { enabled = true },
+      terminal = { enabled = true },
+      toggle = { enabled = true },
+      win = { enabled = true },
+    },
+    keys = {
+      { "<leader>.", function() Snacks.scratch() end, desc = "Toggle Scratch Buffer" },
+      { "<leader>s", function() Snacks.picker.smart() end, desc = "Smart Find" },
+      { "<leader>S", function() Snacks.picker.files() end, desc = "Find Files" },
+      { "<leader>z", function() Snacks.zen() end, desc = "Toggle Zen Mode" },
+      { "<leader>Z", function() Snacks.zen.zoom() end, desc = "Toggle Zoom" },
+      { "<leader>cR", function() Snacks.rename() end, desc = "Rename File" },
+      { "<leader>gb", function() Snacks.gitbrowse() end, desc = "Git Browse" },
+      { "<leader>gf", function() Snacks.lazy.log() end, desc = "Lazy Log" },
+      { "<leader>gg", function() Snacks.lazy() end, desc = "Lazy" },
+      { "<leader>uh", function() Snacks.toggle.hl_scope() end, desc = "Toggle Hl Scope" },
+      { "<leader>ui", function() Snacks.toggle.inlay_hints() end, desc = "Toggle Inlay Hints" },
+      { "<leader>uL", function() Snacks.toggle.line_number() end, desc = "Toggle Line Numbers" },
+      { "<leader>ul", function() Snacks.toggle.diagnostics() end, desc = "Toggle Diagnostics" },
+      { "<leader>uq", function() Snacks.toggle.quickfix() end, desc = "Toggle Quickfix" },
+      { "<leader>uu", function() Snacks.toggle.indent() end, desc = "Toggle Indent" },
+      { "<leader>uT", function() Snacks.toggle.ts_word() end, desc = "Toggle TS Word" },
+      { "<leader>uw", function() Snacks.toggle.wrap() end, desc = "Toggle Wrap" },
+      { "<leader>uy", function() Snacks.toggle.conceal() end, desc = "Toggle Conceal" },
+    },
+    init = function()
+      vim.ui.select = Snacks.picker.select
+      vim.ui.input = Snacks.input
+    end,
+  },
 }

@@ -121,21 +121,21 @@ return {
     lazy = true,
   },
 
-  -- dressing.nvim: Better UI for inputs
-  {
-    "stevearc/dressing.nvim",
-    event = "VeryLazy",
-    opts = {
-      input = {
-        enabled = true,
-        border = "rounded",
-      },
-      select = {
-        enabled = true,
-        backend = { "telescope", "builtin" },
-      },
-    },
-  },
+  -- dressing.nvim: Better UI for inputs (Disabled - using Snacks instead)
+  -- {
+  --   "stevearc/dressing.nvim",
+  --   event = "VeryLazy",
+  --   opts = {
+  --     input = {
+  --       enabled = true,
+  --       border = "rounded",
+  --     },
+  --     select = {
+  --       enabled = true,
+  --       backend = { "telescope", "builtin" },
+  --     },
+  --   },
+  -- },
 
   -- nvim-notify: Better notifications
   -- LazyVim includes nvim-notify, but we can override/extend its configuration here
