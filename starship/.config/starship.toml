@@ -3,183 +3,116 @@
 # ========================================
 # https://starship.rs/config/
 
-# Get editor completions based on the config schema
+# Get editor completions based on config schema
 "$schema" = 'https://starship.rs/config-schema.json'
 
 # ========================================
-# General Settings
+# Format
+# ========================================
+
+# Don't print a new line at the start of the prompt
+add_newline = true
+
+# Prompt format
+format = """
+$os\
+$username\
+$hostname\
+$directory\
+$git_branch\
+$git_commit\
+$git_state\
+$git_status\
+$package\
+$nodejs\
+$python\
+$rust\
+$golang\
+$java\
+$dart\
+$line_break\
+$character"""
+
+# Right prompt (time, command duration)
+right_format = "$cmd_duration $time"
+
+# ========================================
+# Timeout
 # ========================================
 
 # Timeout for commands (in milliseconds)
-command_timeout = 50
+command_timeout = 5000
 
 # Timeout for starship to scan files (in milliseconds)
 scan_timeout = 30
 
-continuation_prompt = '[❯❯ ](fg:blue)'
-
-# Disable the blank line at the start of the prompt
-add_newline = true
-
 # ========================================
-# Prompt Format
-# ========================================
-
-# Right side of the prompt (via以降を右寄せ)
-right_format = """
-$hostname\
-$localip\
-$time\
-$cmd_duration\
-$jobs
-"""
-
-
-# Left side of the prompt
-format = """
-$username\
-$directory\
-$fill\
-$git_branch\
-$git_status\
-$git_commit\
-$nodejs\
-$rust
-$character
-"""
-
-
-# ========================================
-# Prompt Components
+# Character
 # ========================================
 
 [character]
-success_symbol = '[❯❯❯](fg:blue)'
-error_symbol = '[❯❯❯](fg:red)'
+success_symbol = "[➜](green)"
+error_symbol = "[➜](red)"
+vimcmd_symbol = "[➜](blue)"
 
-[username]
-show_always = true
-style_user = "bg:#585858"
-style_root = "bg:#585858"
-format = '[$user ]($style)'
-disabled = false
-
-[hostname]
-ssh_only = true
-style = "bg:#444444"
-ssh_symbol = ''
-format = '[$ssh_symbol]($style)[ on ]($style)[$hostname](fg:red bg:$style)'
+# ========================================
+# Directory
+# ========================================
 
 [directory]
-style = "fg:#303030 bg:#0087AF"
-read_only = ' 󰌾'
-read_only_style = "fg:#AF0000 bg:#0087AF"
-format = '[ $path ]($style)[$read_only]($read_only_style)'
 truncation_length = 3
-truncation_symbol = "…/"
-truncate_to_repo = true
-home_symbol = ' 󰋜 '
-use_os_path_sep = false
-fish_style_pwd_dir_length = 1
-
-[directory.substitutions]
-"Documents" = " 󰈙 "
-"Downloads" = " 󰉍 "
-"Music" = " 󰝚 "
-"Pictures" = " 󰉏 "
-"Videos" = " 󰕧 "
-"development" = " 󰨞 "
-"dev" = " 󰨞 "
-"projects" = " 󰨞 "
-"Desktop" = " 󰀉 "
-"Code" = " 󰨞 "
-"code" = " 󰨞 "
-"workspace" = " 󰨞 "
-"work" = " 󰨞 "
-"home" = " 󰋜 "
-"~" = " 󰋜 "
-
-[fill]
-symbol = " "
-
-[cmd_duration]
-min_time = 500
-format = "[$duration]($style) "
-style = "bold yellow"
-
-[time]
-disabled = false
-format = "[$time]($style) "
-style = "bold white"
-time_format = "%T"
-
-[jobs]
-symbol = " "
-number_threshold = 1
-symbol_threshold = 1
-format = "[$symbol$number]($style) "
-style = "bold blue"
+truncate_to_repo = false
 
 # ========================================
-# Operating System
-# ========================================
-
-[os]
-style = "bg:#585858"
-disabled = true      # Disabled by default
-
-# ========================================
-# Version Control (Git)
+# Git
 # ========================================
 
 [git_branch]
-symbol = ""
-style = "fg:#303030 bg:#CF9562"
-format = '[ ](fg:#CF9562)[ $symbol $branch ]($style)'
-
-[git_status]
-style = "bg:#CF9562 fg:#444444"
-conflicted = '󰞇=\($count\)'
-ahead = '🏎💨'
-behind = '😰'
-diverged = '😵'
-up_to_date = '✓'
-untracked = '🤷'
-stashed = '📦=\($count\)'
-modified = '📝'
-staged = '[s=\($count\)](bg:#CF9562 fg:#444444)'
-renamed = '👅'
-deleted = '🗑'
-format = '[$all_status$ahead_behind ]($style)[](bg:#CF9562 fg:#303030 fg:#444444)'
-
+symbol = " "
+truncation_length = 20
+truncation_symbol = "…"
 
 [git_commit]
-style = "bg: #CF9562"
-commit_hash_length = 4
-tag_symbol = '🔖 '
+commit_hash_length = 7
+tag_symbol = " 🏷  "
+
+[git_state]
+rebase = "REBASING"
+merge = "MERGING"
+revert = "REVERTING"
+cherry_pick = "CHERRY-PICKING"
+bisect = "BISECTING"
+am = "AM"
+am_rebase = "AM-REBASE"
+am_merge = "AM-MERGE"
+
+[git_status]
+conflicted = " ≠"
+ahead = "⇡"
+behind = "⇣"
+diverged = "⇕"
+untracked = "?"
+stashed = "$"
+modified = "*"
+staged = "+"
+renamed = "»"
+deleted = "✘"
+style = "bold yellow"
 
 # ========================================
-# Programming Languages
+# Language Tools
 # ========================================
-
-[c]
-symbol = " "
-style = "bg:#444444"
-format = '[ $symbol ($version) ]($style)'
 
 [nodejs]
-symbol = ""
-style = "bg:#444444"
-format = '[ $symbol ($version) ]($style)'
+symbol = " "
 detect_extensions = ["js", "mjs", "cjs", "ts", "mts", "cts"]
 detect_files = ["package.json"]
-detect_folders = []
 
 [python]
-symbol = " "
-format = '[${symbol}${pyenv_prefix}(${version} )(\($virtualenv\) )]($style)'
+symbol = " "
+pyenv_version_name = true
+pyenv_prefix = "venv"
 style = "bold yellow"
-pyenv_version_name = false
 detect_extensions = ["py"]
 detect_files = [
     ".python-version",
@@ -191,194 +124,79 @@ detect_files = [
 ]
 
 [rust]
-symbol = ""
-style = "bg:#444444"
-format = '[ $symbol ($version) ]($style)'
-
-[julia]
-symbol = " "
-style = "bg:#444444"
-format = '[ $symbol ($version) ]($style)'
+symbol = " "
+style = "bold red"
 
 [golang]
-symbol = " "
-format = "[$symbol($version )]($style)"
+symbol = " "
 style = "bold cyan"
-detect_extensions = ["go"]
-detect_files = ["go.mod", "go.sum", "go.work"]
 
 [java]
-symbol = " "
-format = "[$symbol($version )]($style)"
+symbol = " "
 style = "bold red"
 detect_extensions = ["java", "class", "jar", "gradle", "clj", "cljc"]
 
 [dart]
-symbol = " "
-format = "[$symbol($version )]($style)"
+symbol = " "
 style = "bold blue"
 detect_extensions = ["dart"]
-detect_files = ["pubspec.yaml", "pubspec.yml"]
-
-# Flutter is now part of Dart module
-# [flutter]
-# symbol = " "
-# format = "[$symbol($version )]($style)"
-# style = "bold blue"
-# detect_extensions = ["dart"]
-# detect_files = ["pubspec.yaml", "pubspec.yml"]
 
 [ruby]
-symbol = " "
-format = "[$symbol($version )]($style)"
+symbol = " "
 style = "bold red"
 detect_extensions = ["rb"]
-detect_files = ["Gemfile", ".ruby-version"]
-
-[php]
-symbol = " "
-format = "[$symbol($version )]($style)"
-style = "bold purple"
-detect_extensions = ["php"]
 
 [lua]
-symbol = " "
-format = "[$symbol($version )]($style)"
+symbol = " "
 style = "bold blue"
 detect_extensions = ["lua"]
 
-[swift]
-symbol = " "
-format = "[$symbol($version )]($style)"
-style = "bold orange"
-detect_extensions = ["swift"]
-
 # ========================================
-# Tools & Frameworks
-# ========================================
-
-[docker_context]
-symbol = " "
-style = "bg:#06969A"
-format = '[ $symbol $context ]($style) $path'
-
-[kubernetes]
-symbol = "☸ "
-format = '[$symbol$context( \($namespace\))]($style) '
-style = "bold blue"
-disabled = false
-detect_files = ["k8s"]
-detect_folders = ["k8s"]
-
-[terraform]
-symbol = "💠 "
-format = "[$symbol$workspace]($style) "
-style = "bold purple"
-detect_extensions = ["tf", "tfplan", "tfstate"]
-
-[aws]
-symbol = " "
-format = '[$symbol($profile )(\($region\) )(\[$duration\] )]($style)'
-style = "bold yellow"
-disabled = false
-
-[gcloud]
-symbol = "☁️ "
-format = '[$symbol$account(@$domain)(\($region\))]($style) '
-style = "bold blue"
-disabled = false
-
-# ========================================
-# Package Managers
+# Package Manager
 # ========================================
 
 [package]
 symbol = "📦 "
-format = "[$symbol$version]($style) "
-style = "bold yellow"
-display_private = false
-
-[conda]
-symbol = " "
-format = "[$symbol$environment]($style) "
-style = "bold green"
 
 # ========================================
-# Environment Variables
+# Time
 # ========================================
 
-[env_var.SHELL]
-variable = "SHELL"
-default = "unknown"
-format = "[$env_value]($style) "
+[time]
+disabled = false
+format = "[🕙 $time](bold white)"
+time_format = "%T"
+
+[cmd_duration]
+min_time = 500
+format = "[$duration](bold yellow)"
+show_milliseconds = false
+
+# ========================================
+# Environment
+# ========================================
+
+[username]
+show_always = true
+format = "[$user](bold blue)@"
+disabled = false
+
+[hostname]
+ssh_only = true
+format = "[$hostname](bold green)"
+disabled = false
+
+# ========================================
+# Container
+# ========================================
+
+[docker_context]
+symbol = "🐳 "
+disabled = true
+
+[kubernetes]
+symbol = "☸ "
+disabled = true
 style = "bold blue"
-disabled = true
-
-# ========================================
-# Battery
-# ========================================
-
-[battery]
-full_symbol = ''
-empty_symbol = ''
-charging_symbol = ''
-discharging_symbol = ''
-unknown_symbol = ''
-format = '[$symbol$percentage](red) '
-# style = "bg:#585858"
-
-# ========================================
-# Memory Usage
-# ========================================
-
-[memory_usage]
-disabled = false
-threshold = -1
-symbol = ' '
-style = "bg:#CF9562 fg:#444444"
-
-[localip]
-style = "bg:#CF9562 fg:#444444"
-ssh_only = false
-format = '[$localipv4]($style) '
-disabled = false
-
-# ========================================
-# Status
-# ========================================
-
-[status]
-disabled = false
-format = "[$symbol$status]($style) "
-symbol = "✖"
-success_symbol = ""
-not_executable_symbol = "🚫"
-not_found_symbol = "🔍"
-sigint_symbol = "🧱"
-signal_symbol = "⚡"
-style = "bold red"
-recognize_signal_code = true
-map_symbol = true
-
-# ========================================
-# Custom Commands
-# ========================================
-
-[custom.git_server]
-disabled = true
-description = "Display git server icon"
-command = """
-GIT_REMOTE=$(command git ls-remote --get-url 2> /dev/null)
-if [[ "$GIT_REMOTE" =~ "github" ]]; then
-    echo " "
-elif [[ "$GIT_REMOTE" =~ "gitlab" ]]; then
-    echo " "
-elif [[ "$GIT_REMOTE" =~ "bitbucket" ]]; then
-    echo " "
-else
-    echo " "
-fi
-"""
-when = 'git rev-parse --is-inside-work-tree 2> /dev/null'
-format = "[$output]($style) "
-style = "bold yellow"
+detect_files = ["k8s"]
+detect_folders = ["k8s"]

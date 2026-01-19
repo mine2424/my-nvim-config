@@ -435,9 +435,11 @@ setup_shell() {
 
     if [[ -d "$starship_src" ]]; then
         if [[ "$DRY_RUN" == "true" ]]; then
-            log_info "[DRY RUN] Starship設定を適用予定"
+            log_info "[DRY RUN] Starship設定を適用: $starship_src -> $starship_dest"
         else
-            log_info "Starship設定は後で実装します"
+            if safe_symlink "$starship_src" "$starship_dest" "$CREATE_BACKUP"; then
+                log_success "Starship設定を適用しました"
+            fi
         fi
     fi
 }
