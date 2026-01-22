@@ -284,7 +284,6 @@ safe_mkdir() {
 safe_symlink() {
     local source="$1"
     local target="$2"
-    local backup="${3:-true}"
     
     # ソースの存在確認
     if [[ ! -e "$source" ]]; then
@@ -308,14 +307,8 @@ safe_symlink() {
             fi
         fi
         
-        if [[ "$backup" == "true" ]]; then
-            local backup_path="${target}.backup.$(date +%Y%m%d_%H%M%S)"
-            log_info "既存ファイルをバックアップ: $target -> $backup_path"
-            mv "$target" "$backup_path"
-        else
-            log_warn "既存ファイルを削除: $target"
-            rm -rf "$target"
-        fi
+        log_warn "既存ファイルを削除: $target"
+        rm -rf "$target"
     fi
     
     # シンボリックリンクの作成

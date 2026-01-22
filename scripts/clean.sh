@@ -1,6 +1,5 @@
 #!/usr/bin/env bash
 # clean.sh - 既存の設定ファイルをクリーニング
-# バックアップを作成してから既存の設定を削除
 
 set -euo pipefail
 
@@ -14,12 +13,9 @@ source "$SCRIPT_DIR/utils/common.sh"
 source "$SCRIPT_DIR/utils/os-detect.sh"
 # shellcheck source=./utils/logger.sh
 source "$SCRIPT_DIR/utils/logger.sh"
-# shellcheck source=./utils/backup.sh
-source "$SCRIPT_DIR/utils/backup.sh"
 
 # グローバル変数
 DRY_RUN=false
-CREATE_BACKUP=true
 COMPONENT="all"
 FORCE=false
 
@@ -28,37 +24,32 @@ FORCE=false
 #######################################
 show_usage() {
     cat <<EOF
-使用方法: $(basename "$0") [オプション] [コンポーネント]
-
-既存の設定ファイルをクリーニングします。
-デフォルトでクリーニング前にバックアップを作成します。
-
-コンポーネント:
-  --all              すべての設定をクリーニング（デフォルト）
-  --nvim             Neovim設定のみ
-  --shell            シェル設定のみ（Zsh, Bash）
-  --terminal         ターミナル設定のみ（WezTerm, Starship）
-  --cli              CLIツール設定のみ（Git, tmux等）
-
-オプション:
-  --dry-run          実際には削除せず、何が削除されるか表示
-  --no-backup        バックアップを作成しない
-  --force            確認なしで実行
-  -h, --help         このヘルプを表示
-
-例:
-  # ドライランモード（何が削除されるか確認）
-  $(basename "$0") --dry-run
-
-  # すべての設定をクリーニング（バックアップ付き）
-  $(basename "$0") --all
-
-  # Neovim設定のみクリーニング
-  $(basename "$0") --nvim
-
-  # バックアップなしでクリーニング
-  $(basename "$0") --all --no-backup --force
-
+ 使用方法: $(basename "$0") [オプション] [コンポーネント]
+ 
+ 既存の設定ファイルをクリーニングします。
+ 
+ コンポーネント:
+   --all              すべての設定をクリーニング（デフォルト）
+   --nvim             Neovim設定のみ
+   --shell            シェル設定のみ（Zsh, Bash）
+   --terminal         ターミナル設定のみ（WezTerm, Starship）
+   --cli              CLIツール設定のみ（Git, tmux等）
+ 
+ オプション:
+   --dry-run          実際には削除せず、何が削除されるか表示
+   --force            確認なしで実行
+   -h, --help         このヘルプを表示
+ 
+ 例:
+   # ドライランモード（何が削除されるか確認）
+   $(basename "$0") --dry-run
+ 
+   # すべての設定をクリーニング
+   $(basename "$0") --all
+ 
+   # Neovim設定のみクリーニング
+   $(basename "$0") --nvim
+ 
 EOF
 }
 
@@ -90,10 +81,6 @@ parse_arguments() {
                 ;;
             --dry-run)
                 DRY_RUN=true
-                shift
-                ;;
-            --no-backup)
-                CREATE_BACKUP=false
                 shift
                 ;;
             --force)
@@ -307,14 +294,6 @@ confirm_clean() {
     
     echo ""
     
-    if [[ "$CREATE_BACKUP" == "true" ]]; then
-        log_info "バックアップが作成されます"
-    else
-        log_warn "バックアップは作成されません"
-    fi
-    
-    echo ""
-    
     if ! confirm "続行しますか？" "n"; then
         log_info "キャンセルしました"
         exit 0
@@ -332,15 +311,6 @@ show_summary() {
         log_info "実際にクリーニングするには --dry-run オプションを外してください"
     else
         log_success "クリーニングが完了しました"
-        
-        if [[ "$CREATE_BACKUP" == "true" ]]; then
-            local latest_backup
-            latest_backup="$(get_latest_backup)"
-            if [[ -n "$latest_backup" ]]; then
-                log_info "バックアップ: $(basename "$latest_backup")"
-                log_info "復元するには: ./scripts/restore.sh --backup $(basename "$latest_backup")"
-            fi
-        fi
     fi
 }
 
@@ -366,18 +336,6 @@ main() {
     
     # 確認
     confirm_clean
-    
-    # バックアップの作成
-    if [[ "$CREATE_BACKUP" == "true" ]] && [[ "$DRY_RUN" == "false" ]]; then
-        log_section "バックアップの作成"
-        if ! create_backup "$COMPONENT"; then
-            log_error "バックアップの作成に失敗しました"
-            if ! confirm "バックアップなしで続行しますか？" "n"; then
-                log_info "キャンセルしました"
-                exit 1
-            fi
-        fi
-    fi
     
     # クリーニングの実行
     case "$COMPONENT" in

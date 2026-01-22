@@ -314,13 +314,53 @@ sync_terminal() {
     local dotfiles_root
     dotfiles_root="$(get_dotfiles_root)"
     local wezterm_config="$(get_config_dir wezterm)/wezterm.lua"
+    local zellij_config="$(get_config_dir zellij)/config.kdl"
+    local zellij_config_dir="$(dirname "$zellij_config")"
+    local zellij_layouts_dir="$zellij_config_dir/layouts"
+    local zellij_dotfiles_dir="$dotfiles_root/zellij"
     
     if [[ "$DIRECTION" == "push" ]]; then
         # dotfiles -> local
         sync_file "$dotfiles_root/wezterm/.config/wezterm/wezterm.lua" "$wezterm_config" "WezTerm設定"
+        sync_file "$zellij_dotfiles_dir/config.kdl" "$zellij_config" "Zellij設定"
+        
+        # Zellijレイアウトディレクトリを同期
+        if [[ -d "$zellij_dotfiles_dir/layouts" ]]; then
+            if [[ "$DRY_RUN" == "true" ]]; then
+                log_info "[DRY RUN] Zellijレイアウトを同期予定: $zellij_dotfiles_dir/layouts -> $zellij_layouts_dir"
+            else
+                safe_mkdir "$zellij_layouts_dir" || {
+                    log_error "ディレクトリの作成に失敗しました: $zellij_layouts_dir"
+                    return 1
+                }
+                if cp -r "$zellij_dotfiles_dir/layouts"/* "$zellij_layouts_dir/" 2>/dev/null; then
+                    log_success "Zellijレイアウトを同期しました"
+                else
+                    log_warn "Zellijレイアウトの同期に失敗しました（空または存在しません）"
+                fi
+            fi
+        fi
     else
         # local -> dotfiles
         sync_file "$wezterm_config" "$dotfiles_root/wezterm/.config/wezterm/wezterm.lua" "WezTerm設定"
+        sync_file "$zellij_config" "$zellij_dotfiles_dir/config.kdl" "Zellij設定"
+        
+        # Zellijレイアウトディレクトリを同期
+        if [[ -d "$zellij_layouts_dir" ]]; then
+            if [[ "$DRY_RUN" == "true" ]]; then
+                log_info "[DRY RUN] Zellijレイアウトを同期予定: $zellij_layouts_dir -> $zellij_dotfiles_dir/layouts"
+            else
+                safe_mkdir "$zellij_dotfiles_dir/layouts" || {
+                    log_error "ディレクトリの作成に失敗しました: $zellij_dotfiles_dir/layouts"
+                    return 1
+                }
+                if cp -r "$zellij_layouts_dir"/* "$zellij_dotfiles_dir/layouts/" 2>/dev/null; then
+                    log_success "Zellijレイアウトを同期しました"
+                else
+                    log_warn "Zellijレイアウトの同期に失敗しました（空または存在しません）"
+                fi
+            fi
+        fi
     fi
 }
 
@@ -447,13 +487,6 @@ sync_claude() {
             if [[ "$DRY_RUN" == "true" ]]; then
                 log_info "[DRY RUN] Claude設定を同期予定: $claude_dotfiles -> $claude_local"
             else
-                # 既存の設定をバックアップ
-                if [[ -e "$claude_local" ]]; then
-                    local backup_path="${claude_local}.backup.$(date +%Y%m%d_%H%M%S)"
-                    log_info "既存設定をバックアップ: $claude_local -> $backup_path"
-                    mv "$claude_local" "$backup_path" 2>/dev/null || true
-                fi
-                
                 # ディレクトリをコピー
                 if cp -r "$claude_dotfiles" "$claude_local" 2>/dev/null; then
                     # deny-check.shに実行権限を付与
@@ -525,7 +558,7 @@ confirm_sync() {
         all)
             echo "  - Neovim設定"
             echo "  - シェル設定（Zsh + Starship）"
-            echo "  - ターミナル設定（WezTerm）"
+            echo "  - ターミナル設定（WezTerm + Zellij）"
             echo "  - CLIツール設定（Git, tmux等）"
             echo "  - dev/agentコマンド"
             echo "  - Claude設定"
@@ -537,7 +570,7 @@ confirm_sync() {
             echo "  - シェル設定（Zsh + Starship）"
             ;;
         terminal)
-            echo "  - ターミナル設定（WezTerm）"
+            echo "  - ターミナル設定（WezTerm + Zellij）"
             ;;
         cli)
             echo "  - CLIツール設定（Git, tmux等）"

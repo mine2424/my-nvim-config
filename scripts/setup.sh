@@ -14,8 +14,6 @@ source "$SCRIPT_DIR/utils/common.sh"
 source "$SCRIPT_DIR/utils/os-detect.sh"
 # shellcheck source=./utils/logger.sh
 source "$SCRIPT_DIR/utils/logger.sh"
-# shellcheck source=./utils/backup.sh
-source "$SCRIPT_DIR/utils/backup.sh"
 
 # グローバル変数
 SCRIPT_VERSION="3.0.0"
@@ -23,7 +21,6 @@ DRY_RUN=false
 FORCE=false
 COMPONENT="all"
 INSTALL_DEPENDENCIES=false
-CREATE_BACKUP=true
 
 #######################################
 # 使用方法を表示
@@ -42,12 +39,11 @@ dotfilesの設定を適用し、必要なツールをインストールします
   --cli              CLIツール設定のみ（Git, tmux等）
   --claude           Claude設定のみ
 
-オプション:
-  --install          依存関係もインストール
-  --dry-run          実際には適用せず、何が行われるか表示
-  --no-backup        バックアップを作成しない
-  --force            確認なしで実行
-  -h, --help         このヘルプを表示
+ オプション:
+   --install          依存関係もインストール
+   --dry-run          実際には適用せず、何が行われるか表示
+   --force            確認なしで実行
+   -h, --help         このヘルプを表示
 
 例:
   # すべての設定を適用（設定ファイルのみ）
@@ -101,10 +97,6 @@ parse_arguments() {
                 ;;
             --dry-run)
                 DRY_RUN=true
-                shift
-                ;;
-            --no-backup)
-                CREATE_BACKUP=false
                 shift
                 ;;
             --force)
@@ -370,7 +362,7 @@ setup_nvim() {
     fi
     
     # シンボリックリンクの作成
-    if safe_symlink "$nvim_config_src" "$nvim_config_dest" "$CREATE_BACKUP"; then
+    if safe_symlink "$nvim_config_src" "$nvim_config_dest"; then
         log_success "Neovim設定を適用しました"
     else
         log_error "Neovim設定の適用に失敗しました"
@@ -395,7 +387,7 @@ setup_shell() {
         if [[ "$DRY_RUN" == "true" ]]; then
             log_info "[DRY RUN] Zsh設定を適用: $zshrc_src -> $zshrc_dest"
         else
-            if safe_symlink "$zshrc_src" "$zshrc_dest" "$CREATE_BACKUP"; then
+            if safe_symlink "$zshrc_src" "$zshrc_dest"; then
                 log_success "Zsh設定を適用しました"
             fi
         fi
@@ -409,7 +401,7 @@ setup_shell() {
         if [[ "$DRY_RUN" == "true" ]]; then
             log_info "[DRY RUN] Zshローカル設定を適用: $zshrc_local_src -> $zshrc_local_dest"
         else
-            if safe_symlink "$zshrc_local_src" "$zshrc_local_dest" "$CREATE_BACKUP"; then
+            if safe_symlink "$zshrc_local_src" "$zshrc_local_dest"; then
                 log_success "Zshローカル設定を適用しました"
             fi
         fi
@@ -423,7 +415,7 @@ setup_shell() {
         if [[ "$DRY_RUN" == "true" ]]; then
             log_info "[DRY RUN] Sheldon設定を適用: $sheldon_src -> $sheldon_dest"
         else
-            if safe_symlink "$sheldon_src" "$sheldon_dest" "$CREATE_BACKUP"; then
+            if safe_symlink "$sheldon_src" "$sheldon_dest"; then
                 log_success "Sheldon設定を適用しました"
             fi
         fi
@@ -437,16 +429,10 @@ setup_shell() {
         if [[ "$DRY_RUN" == "true" ]]; then
             log_info "[DRY RUN] Starship設定を適用: $starship_config_src -> $starship_config_dest"
         else
-            # 既存設定のバックアップ
+            # 既存設定を削除
             if [[ -e "$starship_config_dest" ]]; then
-                if [[ "$CREATE_BACKUP" == "true" ]]; then
-                    local backup_path="${starship_config_dest}.backup.$(date +%Y%m%d_%H%M%S)"
-                    log_info "既存設定をバックアップ: $starship_config_dest -> $backup_path"
-                    mv "$starship_config_dest" "$backup_path"
-                else
-                    log_warn "既存設定を削除: $starship_config_dest"
-                    rm -rf "$starship_config_dest"
-                fi
+                log_warn "既存設定を削除: $starship_config_dest"
+                rm -rf "$starship_config_dest"
             fi
 
             # ファイルをコピー
@@ -481,7 +467,7 @@ setup_terminal() {
         if [[ "$DRY_RUN" == "true" ]]; then
             log_info "[DRY RUN] WezTerm設定を適用: $wezterm_src -> $wezterm_dest"
         else
-            if safe_symlink "$wezterm_src" "$wezterm_dest" "$CREATE_BACKUP"; then
+            if safe_symlink "$wezterm_src" "$wezterm_dest"; then
                 log_success "WezTerm設定を適用しました"
             fi
         fi
@@ -495,7 +481,7 @@ setup_terminal() {
         if [[ "$DRY_RUN" == "true" ]]; then
             log_info "[DRY RUN] Ghostty設定を適用: $ghostty_src -> $ghostty_dest"
         else
-            if safe_symlink "$ghostty_src" "$ghostty_dest" "$CREATE_BACKUP"; then
+            if safe_symlink "$ghostty_src" "$ghostty_dest"; then
                 log_success "Ghostty設定を適用しました"
             fi
         fi
@@ -520,16 +506,10 @@ setup_cli_tools() {
             log_info "[DRY RUN] Zellij設定を適用: $zellij_src -> $zellij_dest"
         else
             # Zellij設定はディレクトリをコピー（シンボリックリンクではなく）
+            # 既存設定を削除
             if [[ -e "$zellij_dest" ]] || [[ -L "$zellij_dest" ]]; then
-                if [[ "$CREATE_BACKUP" == "true" ]]; then
-                    local backup_path="${zellij_dest}.backup.$(date +%Y%m%d_%H%M%S)"
-                    log_info "既存設定をバックアップ: $zellij_dest -> $backup_path"
-                    rm -rf "$backup_path" 2>/dev/null
-                    mv "$zellij_dest" "$backup_path"
-                else
-                    log_warn "既存設定を削除: $zellij_dest"
-                    rm -rf "$zellij_dest"
-                fi
+                log_warn "既存設定を削除: $zellij_dest"
+                rm -rf "$zellij_dest"
             fi
 
             # ディレクトリをコピー
@@ -550,7 +530,7 @@ setup_cli_tools() {
         if [[ "$DRY_RUN" == "true" ]]; then
             log_info "[DRY RUN] Tmux設定を適用: $tmux_src -> $tmux_dest"
         else
-            if safe_symlink "$tmux_src" "$tmux_dest" "$CREATE_BACKUP"; then
+            if safe_symlink "$tmux_src" "$tmux_dest"; then
                 log_success "Tmux設定を適用しました"
             fi
         fi
@@ -564,7 +544,7 @@ setup_cli_tools() {
         if [[ "$DRY_RUN" == "true" ]]; then
             log_info "[DRY RUN] Git設定を適用: $gitconfig_src -> $gitconfig_dest"
         else
-            if safe_symlink "$gitconfig_src" "$gitconfig_dest" "$CREATE_BACKUP"; then
+            if safe_symlink "$gitconfig_src" "$gitconfig_dest"; then
                 log_success "Git設定を適用しました"
             fi
         fi
@@ -594,15 +574,10 @@ setup_claude() {
     
     # ディレクトリをコピー（シンボリックリンクではなく、ファイルをコピー）
     # これは.claudeディレクトリ全体をコピーするため
+    # 既存設定を削除
     if [[ -e "$claude_dest" ]] || [[ -L "$claude_dest" ]]; then
-        if [[ "$CREATE_BACKUP" == "true" ]]; then
-            local backup_path="${claude_dest}.backup.$(date +%Y%m%d_%H%M%S)"
-            log_info "既存設定をバックアップ: $claude_dest -> $backup_path"
-            mv "$claude_dest" "$backup_path"
-        else
-            log_warn "既存設定を削除: $claude_dest"
-            rm -rf "$claude_dest"
-        fi
+        log_warn "既存設定を削除: $claude_dest"
+        rm -rf "$claude_dest"
     fi
     
     # ディレクトリをコピー
@@ -672,12 +647,6 @@ confirm_setup() {
     
     echo ""
     
-    if [[ "$CREATE_BACKUP" == "true" ]]; then
-        log_info "既存設定のバックアップが作成されます"
-    else
-        log_warn "バックアップは作成されません"
-    fi
-    
     if [[ "$INSTALL_DEPENDENCIES" == "true" ]]; then
         log_info "依存関係もインストールされます"
     fi
@@ -737,18 +706,6 @@ main() {
     
     # 確認
     confirm_setup
-    
-    # バックアップの作成
-    if [[ "$CREATE_BACKUP" == "true" ]] && [[ "$DRY_RUN" == "false" ]]; then
-        log_section "既存設定のバックアップ"
-        if ! create_backup "$COMPONENT"; then
-            log_warn "バックアップの作成に失敗しました"
-            if ! confirm "バックアップなしで続行しますか？" "n"; then
-                log_info "キャンセルしました"
-                exit 1
-            fi
-        fi
-    fi
     
     # 依存関係のインストール
     if [[ "$INSTALL_DEPENDENCIES" == "true" ]]; then
