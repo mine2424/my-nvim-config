@@ -211,30 +211,17 @@ keybinds {
 // Plugin aliases - can be used to change the implementation of Zellij
 // changing these requires a restart to take effect
 plugins {
-    tab-bar location="zellij:tab-bar" {
-        position "bottom"
-        collapsed false
-        max_tabs 10
-        tabs {
-            template "{name}"
-            fg "magenta"
-            bg "black"
-            focus_fg "yellow"
-            focus_bg "black"
-            active_fg "green"
-            active_bg "black"
-        }
-    }
-    status-bar location="disabled"
+    tab-bar location="zellij:tab-bar"
+    status-bar location="zellij:status-bar"
     strider location="zellij:strider"
-    compact-bar location="disabled"
-    session-manager location="disabled"
-    welcome-screen location="disabled"
+    compact-bar location="zellij:compact-bar"
+    session-manager location="zellij:session-manager"
+    welcome-screen location="zellij:plugin-manager"
     filepicker location="zellij:strider" {
         cwd "/"
     }
     configuration location="zellij:configuration"
-    plugin-manager location="disabled"
+    plugin-manager location="zellij:plugin-manager"
     about location="zellij:about"
 }
 
@@ -358,7 +345,7 @@ default_layout "default"
 //   - true (default)
 //   - false
 //
-mouse_mode false
+mouse_mode true
 
 // Configure the scroll back buffer size
 // This is the number of lines zellij stores for each pane in the scroll back

@@ -7,7 +7,7 @@ return {
   -- Mason: LSP server manager
   -- LazyVim includes Mason, but we can extend its configuration
   {
-    "mason-org/mason.nvim",
+    "williamboman/mason.nvim",
     opts = {
       ui = {
         border = "rounded",
@@ -23,7 +23,7 @@ return {
   -- Mason-LSPConfig: Auto-setup LSP servers
   -- LazyVim includes mason-lspconfig, but we can add more servers here
   {
-    "mason-org/mason-lspconfig.nvim",
+    "williamboman/mason-lspconfig.nvim",
     opts = {
       ensure_installed = {
         -- Core languages
@@ -63,8 +63,8 @@ return {
   {
     "neovim/nvim-lspconfig",
     dependencies = {
-      "mason-org/mason.nvim",
-      "mason-org/mason-lspconfig.nvim",
+      "williamboman/mason.nvim",
+      "williamboman/mason-lspconfig.nvim",
       "hrsh7th/cmp-nvim-lsp",
     },
     opts = {
@@ -72,13 +72,12 @@ return {
     },
     config = function()
       local lspconfig = require("lspconfig")
-      local capabilities = require("cmp_nvim_lsp").default_capabilities()
 
       -- Common on_attach function
       local on_attach = function(client, bufnr)
         -- Enable completion triggered by <c-x><c-o>
-        vim.api.nvim_buf_set_option(bufnr, "omnifunc", "v:lua.vim.lsp.omnifunc")
-        
+        vim.bo[bufnr].omnifunc = "v:lua.vim.lsp.omnifunc"
+
         -- Format on save (if supported)
         if client.supports_method("textDocument/formatting") then
           vim.api.nvim_create_autocmd("BufWritePre", {
@@ -267,7 +266,6 @@ return {
 
       -- Setup all servers
       for server, config in pairs(servers) do
-        config.capabilities = capabilities
         config.on_attach = on_attach
         lspconfig[server].setup(config)
       end

@@ -72,7 +72,7 @@ return {
   -- mini.nvim: Collection of minimal plugins
   -- LazyVim includes mini.nvim, but we can extend its configuration here
   {
-    "nvim-mini/mini.nvim",
+    "echasnovski/mini.nvim",
     opts = function()
       -- Extend mini.nvim configuration beyond LazyVim defaults
       return {
@@ -161,7 +161,6 @@ return {
       { "<C-j>", "<cmd>TmuxNavigateDown<cr>", desc = "Navigate down" },
       { "<C-k>", "<cmd>TmuxNavigateUp<cr>", desc = "Navigate up" },
       { "<C-l>", "<cmd>TmuxNavigateRight<cr>", desc = "Navigate right" },
-      { "<C-\\>", "<cmd>TmuxNavigatePrevious<cr>", desc = "Navigate previous" },
     },
     init = function()
       vim.g.tmux_navigator_no_mappings = 1
