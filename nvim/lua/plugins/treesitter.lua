@@ -31,6 +31,7 @@ return {
         "python", "ruby",
         
         -- Other
+        "latex", "norg", "typst", "vue", "svelte",
         "regex", "dockerfile", "gitignore",
         "sql", "graphql", "proto",
       },

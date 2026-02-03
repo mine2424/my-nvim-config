@@ -116,7 +116,18 @@ vim.g.loaded_netrwPlugin = 1          -- Disable netrw plugin
 vim.g.python3_host_prog = vim.fn.exepath("python3")
 
 -- Node.js
-vim.g.node_host_prog = vim.fn.stdpath("data") .. "/mason/bin/neovim-node-host"
+do
+  local node_host = vim.fn.exepath("neovim-node-host")
+  if node_host == "" then
+    local mason_host = vim.fn.stdpath("data") .. "/mason/bin/neovim-node-host"
+    if vim.fn.filereadable(mason_host) == 1 then
+      node_host = mason_host
+    end
+  end
+  if node_host ~= "" then
+    vim.g.node_host_prog = node_host
+  end
+end
 
 -- ========================================
 -- Diagnostics

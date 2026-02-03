@@ -161,8 +161,25 @@ sync_file() {
     local target_dir
     target_dir="$(dirname "$target")"
     safe_mkdir "$target_dir" || return 1
-    
-    # ファイル/ディレクトリのコピー
+
+    # ディレクトリ同期は内容をミラー（ネストを避ける）
+    if [[ -d "$source" ]]; then
+        safe_mkdir "$target" || return 1
+        if check_command rsync; then
+            if rsync -a --delete "$source"/ "$target"/ 2>/dev/null; then
+                log_success "同期完了: ${description}"
+                return 0
+            fi
+        fi
+        if cp -R "$source"/. "$target"/ 2>/dev/null; then
+            log_success "同期完了: ${description}"
+            return 0
+        fi
+        log_error "同期に失敗しました: ${description}"
+        return 1
+    fi
+
+    # ファイルのコピー
     # 既に存在する場合は、同一かどうかをチェック
     if [[ -e "$target" ]] && [[ -f "$source" ]] && [[ -f "$target" ]]; then
         if cmp -s "$source" "$target" 2>/dev/null; then
@@ -172,7 +189,6 @@ sync_file() {
         fi
     fi
     
-    # ファイル/ディレクトリのコピー
     if cp -r "$source" "$target" 2>/dev/null; then
         log_success "同期完了: ${description}"
         return 0
@@ -188,6 +204,43 @@ sync_file() {
         log_error "同期に失敗しました: ${description}"
         return 1
     fi
+}
+
+#######################################
+# Codexの設定ディレクトリを取得
+# Returns:
+#   Codex設定ディレクトリパス
+#######################################
+get_codex_home() {
+    if [[ -n "${CODEX_HOME:-}" ]]; then
+        echo "${CODEX_HOME/#\~/$HOME}"
+        return 0
+    fi
+
+    local xdg_codex
+    xdg_codex="$(get_config_dir codex)"
+
+    if [[ -f "$HOME/.codex/config.toml" ]] || [[ -f "$HOME/.codex/AGENTS.md" ]]; then
+        echo "$HOME/.codex"
+        return 0
+    fi
+
+    if [[ -f "$xdg_codex/config.toml" ]] || [[ -f "$xdg_codex/AGENTS.md" ]]; then
+        echo "$xdg_codex"
+        return 0
+    fi
+
+    if [[ -d "$HOME/.codex" ]] || [[ -L "$HOME/.codex" ]]; then
+        echo "$HOME/.codex"
+        return 0
+    fi
+
+    if [[ -d "$xdg_codex" ]] || [[ -L "$xdg_codex" ]]; then
+        echo "$xdg_codex"
+        return 0
+    fi
+
+    echo "$HOME/.codex"
 }
 
 #######################################
@@ -373,6 +426,8 @@ sync_cli_tools() {
     local dotfiles_root
     dotfiles_root="$(get_dotfiles_root)"
     local local_bin="$HOME/.local/bin"
+    local codex_home
+    codex_home="$(get_codex_home)"
     
     if [[ "$DIRECTION" == "push" ]]; then
         # dotfiles -> local
@@ -382,6 +437,9 @@ sync_cli_tools() {
         # tmux設定は tmux/.tmux.conf に配置されている
         if [[ -f "$dotfiles_root/tmux/.tmux.conf" ]]; then
             sync_file "$dotfiles_root/tmux/.tmux.conf" "$HOME/.tmux.conf" "tmux設定"
+        fi
+        if [[ -d "$dotfiles_root/codex" ]]; then
+            sync_file "$dotfiles_root/codex" "$codex_home" "Codex設定 ($codex_home)"
         fi
         
         # dev と agent コマンドを ~/.local/bin に同期
@@ -432,6 +490,9 @@ sync_cli_tools() {
         # tmux設定は tmux/.tmux.conf に配置されている
         if [[ -f "$HOME/.tmux.conf" ]]; then
             sync_file "$HOME/.tmux.conf" "$dotfiles_root/tmux/.tmux.conf" "tmux設定"
+        fi
+        if [[ -d "$codex_home" ]]; then
+            sync_file "$codex_home" "$dotfiles_root/codex" "Codex設定 ($codex_home)"
         fi
         
         # dev と agent コマンドを dotfiles に同期

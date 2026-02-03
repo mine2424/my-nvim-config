@@ -83,8 +83,7 @@ revert = "REVERTING"
 cherry_pick = "CHERRY-PICKING"
 bisect = "BISECTING"
 am = "AM"
-am_rebase = "AM-REBASE"
-am_merge = "AM-MERGE"
+am_or_rebase = "AM-REBASE"
 
 [git_status]
 conflicted = " ≠"
@@ -98,6 +97,9 @@ staged = "+"
 renamed = "»"
 deleted = "✘"
 style = "bold yellow"
+# NOTE: $HOME is a git worktree for dotfiles; `git status` here takes ~5s and blocks the prompt.
+# Disable git_status to keep prompt/render speed snappy (especially with multiple Zellij tabs).
+disabled = true
 
 # ========================================
 # Language Tools

@@ -57,6 +57,13 @@ setopt MULTIOS                # Perform implicit tees or cats when multiple redi
 # Completion System
 # ========================================
 
+# Set ZSH cache directory
+export ZSH_CACHE_DIR="${XDG_CACHE_HOME:-$HOME/.cache}/zsh"
+
+# Ensure cache directories exist
+[[ ! -d "$ZSH_CACHE_DIR" ]] && mkdir -p "$ZSH_CACHE_DIR"
+[[ ! -d "$ZSH_CACHE_DIR/completions" ]] && mkdir -p "$ZSH_CACHE_DIR/completions"
+
 # Initialize completion system
 autoload -Uz compinit
 
@@ -191,6 +198,22 @@ alias gst='git status'
 alias ga='git add'
 alias gaa='git add --all'
 alias gc='git commit'
+
+# Codex: run inside tmux to preserve scrollback in Ghostty
+codex() {
+    if command -v tmux >/dev/null 2>&1 && [[ -z "${TMUX-}" ]]; then
+        local tty_name session_name
+        tty_name="$(tty 2>/dev/null | awk -F/ '{print $NF}')"
+        if [[ -n "$tty_name" ]]; then
+            session_name="codex-${tty_name//./-}"
+        else
+            session_name="codex-$$"
+        fi
+        tmux new-session -A -s "$session_name" -- command codex "$@"
+    else
+        command codex "$@"
+    fi
+}
 alias gcm='git commit -m'
 alias gca='git commit --amend'
 alias gp='git push'
@@ -457,4 +480,9 @@ fi
 # OpenCode
 if [[ -d "$HOME/.opencode/bin" ]]; then
     export PATH="$HOME/.opencode/bin:$PATH"
+fi
+
+# Codex helpers
+if [[ -d "$HOME/development/dotfiles/codex/bin" ]]; then
+    export PATH="$HOME/development/dotfiles/codex/bin:$PATH"
 fi

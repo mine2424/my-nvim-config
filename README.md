@@ -377,6 +377,90 @@ Ctrl+A t        時計を表示
 Ctrl+A Space    レイアウトを切り替え
 ```
 
+**Zellij（Standard Mode）:**
+
+**基本操作:**
+```
+Ctrl+p        Paneモード
+Ctrl+n        Resizeモード
+Ctrl+t        Tabモード
+Ctrl+s        Scrollモード
+Ctrl+o        Sessionモード
+Ctrl+a        Tmuxプレフィックスモード
+```
+
+**Paneモード (`Ctrl+p`):**
+```
+h/←/j/↓/k/→  ペイン移動
+n             新規ペイン
+d             ペインを下に分割
+r             ペインを右に分割
+s             スタックペイン作成
+x             ペインを閉じる
+f             フルスクリーン切替
+w             フローティングペイン切替
+```
+
+**Resizeモード (`Ctrl+n`):**
+```
+h/←/j/↓/k/→  拡大
+H/J/K/L       縮小
+=/+           拡大
+-             縮小
+```
+
+**Tabモード (`Ctrl+t`):**
+```
+n             新規タブ
+1-9           タブ1-9へ移動（Tabモード維持）
+h/←/k/↑      前のタブ
+l/→/j/↓      次のタブ
+r             タブ名変更
+x             タブを閉じる
+```
+
+**Scrollモード (`Ctrl+s`):**
+```
+j/↓           下にスクロール
+k/↑           上にスクロール
+Ctrl+f        ページダウン
+Ctrl+b        ページアップ
+d             半ページダウン
+u             半ページアップ
+Ctrl+c        スクロールモード終了
+```
+
+**Sessionモード (`Ctrl+o`):**
+```
+d             デタッチ
+w             セッションマネージャー
+c             設定
+p             プラグインマネージャー
+```
+
+**Tmuxプレフィックスモード (`Ctrl+a`):**
+```
+c             新規タブ
+%             ペインを右に分割
+"             ペインを下に分割
+n             次のタブ
+p             前のタブ
+d             デタッチ
+x             ペインを閉じる
+h/j/k/l       ペイン移動
+Ctrl+a        Ctrl+aを端末に送信
+```
+
+**Lockモード（デフォルト推奨）:**
+```
+Alt+Super+z   Lockモード終了
+Alt+Super+←/→/↑/↓  ペイン/タブ移動
+Alt+Super+f   フローティングペイン切替
+Alt+Super+,   拡大
+Alt+Super+.   縮小
+Alt+Super+p   新規ペイン
+```
+
 **WezTerm（macOS: Cmd、Windows/Linux: Ctrl）:**
 ```
 Cmd/Ctrl+T      新規タブ
@@ -397,7 +481,7 @@ dotfilesとローカルPC間で設定を同期できます。
 ./scripts/sync.sh push
 
 # 個別に反映
-./scripts/sync.sh push --terminal  # WezTerm設定のみ
+./scripts/sync.sh push --terminal  # WezTerm + Zellij設定のみ
 ./scripts/sync.sh push --shell     # シェル設定のみ
 ./scripts/sync.sh push --nvim      # Neovim設定のみ
 
@@ -413,7 +497,7 @@ dotfilesとローカルPC間で設定を同期できます。
 
 # 個別に取り込み
 ./scripts/sync.sh pull --nvim      # Neovim設定のみ
-./scripts/sync.sh pull --terminal  # WezTerm設定のみ
+./scripts/sync.sh pull --terminal  # WezTerm + Zellij設定のみ
 
 # 取り込み後はコミット
 git add .
@@ -465,6 +549,17 @@ git commit -m "Update configurations from local"
 **フォーマッター・Linter:**
 - **conform.nvim**: 自動フォーマット（15言語）
 - **nvim-lint**: リアルタイムLint
+
+### Zellij
+
+- **Prefix**: `Ctrl+A`
+- **Standard Zellij keybindings** (not tmux-like)
+- **Tab bar at bottom**: 下部にタブバー表示
+- **Tips on startup**: 起動時にチップス表示
+- **No session persistence**: セッション永続化なし（新しいタブで新規セッション）
+- **Ghostty key conflict resolution**: Alt+Superキーで衝突回避
+- **Tokyo Night Night**: カラースキーム
+- **Mouse support**: マウス操作有効
 
 ### Tmux
 

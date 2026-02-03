@@ -10,6 +10,9 @@ Zellij has been installed and configured with:
 - **Ghostty key conflict resolution** using Alt+Super combinations
 - **Tokyo Night** theme (inherited from Ghostty)
 - **Mouse support** enabled
+- **Tab bar at bottom** for better visibility
+- **No session persistence** (new terminal tabs create new sessions)
+- **Tips always shown** on startup
 
 ## Ghostty Configuration
 
@@ -80,11 +83,13 @@ Lock mode is recommended to avoid key conflicts with the shell and other applica
 | Key | Action |
 |-----|--------|
 | `n` | New tab |
-| `1-9` | Go to tab 1-9 |
+| `1-9` | Go to tab 1-9 (stays in Tab mode) |
 | `h/←/k/↑` | Previous tab |
 | `l/→/j/↓` | Next tab |
 | `r` | Rename tab |
 | `x` | Close tab |
+
+**Note**: Tab bar is displayed at the bottom of the screen and remains visible when switching tabs.
 
 ### Scroll Mode (`Ctrl+s`)
 | Key | Action |
@@ -139,20 +144,56 @@ brew install zellij
 - **Zellij layouts**: `~/.config/zellij/layouts/`
 - **Ghostty config**: `~/.config/ghostty/config`
 
+## Key Configuration Details
+
+### Tab Bar Position
+The tab bar is positioned at the bottom of the screen for better visibility:
+```kdl
+plugins {
+    tab-bar location="zellij:tab-bar" {
+        position "bottom"
+        collapsed false
+    }
+}
+```
+
+### Session Persistence
+Session serialization is disabled to allow new sessions in each terminal tab:
+```kdl
+session_serialization false
+on_force_close "quit"
+```
+
+### Release Notes
+Tips and release notes are always shown on startup:
+```kdl
+show_release_notes true
+```
+
+### Tab Navigation Without Mode Exit
+When pressing `1-9` in Tab mode, Zellij stays in Tab mode (doesn't exit to Normal mode), allowing quick tab switching.
+
 ## Auto-Start
 
-Zellij is configured to auto-start when opening a new terminal session (added to `~/.zshrc.local`):
+Zellij is configured to auto-start when opening a new terminal session (added to `~/.zshrc.local`).
+It uses a per-TTY session name (e.g. `ghostty-ttys000`) and safely resurrects dead sessions:
 
 ```bash
-if command -v zellij &> /dev/null && [[ -z "$ZELLIJ" ]]; then
-    zellij attach -c
+if command -v zellij &> /dev/null && [[ -z "$ZELLIJ" ]] && [[ -o interactive ]] && [[ -t 0 ]] && [[ -t 1 ]]; then
+    tty_name="$(tty 2>/dev/null | awk -F/ '{print $NF}')"
+    if [[ -n "$tty_name" ]]; then
+        session_name="ghostty-${tty_name//./-}"
+    else
+        session_name="ghostty-$$"
+    fi
+    zellij attach -c "$session_name"
 fi
 ```
 
 This will:
-1. Check if zellij is available
-2. Check if not already in a zellij session
-3. Attach to existing session or create a new one
+1. Check if zellij is available (interactive TTY only)
+2. Generate a unique session name per terminal
+3. Attach to an existing session (or resurrect a dead one), or create it if missing
 
 ## Usage Examples
 
@@ -279,7 +320,13 @@ serialize_pane_viewport true
 If you want to disable Zellij auto-start, comment out or remove the auto-start section in `~/.zshrc.local`:
 
 ```bash
-# if command -v zellij &> /dev/null && [[ -z "$ZELLIJ" ]]; then
-#     zellij attach -c
+# if command -v zellij &> /dev/null && [[ -z "$ZELLIJ" ]] && [[ -o interactive ]] && [[ -t 0 ]] && [[ -t 1 ]]; then
+#     tty_name="$(tty 2>/dev/null | awk -F/ '{print $NF}')"
+#     if [[ -n "$tty_name" ]]; then
+#         session_name="ghostty-${tty_name//./-}"
+#     else
+#         session_name="ghostty-$$"
+#     fi
+#     zellij attach -c "$session_name"
 # fi
 ```

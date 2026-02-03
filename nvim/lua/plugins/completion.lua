@@ -7,6 +7,7 @@ return {
   -- nvim-cmp: Completion engine
   {
     "hrsh7th/nvim-cmp",
+    lazy = false,
     dependencies = {
       -- Completion sources (LazyVim includes these, but we can add more)
       "hrsh7th/cmp-nvim-lsp",     -- LSP completion

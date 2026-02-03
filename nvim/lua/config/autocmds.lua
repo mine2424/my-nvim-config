@@ -40,6 +40,16 @@ autocmd("BufWritePre", {
 -- File Type Specific
 -- ========================================
 
+-- Markdown: disable spell underlines (use explicit spell enable per-buffer if needed)
+augroup("MarkdownSettings", { clear = true })
+autocmd("FileType", {
+  group = "MarkdownSettings",
+  pattern = { "markdown", "mdx" },
+  callback = function()
+    vim.opt_local.spell = false
+  end,
+})
+
 -- Close certain filetypes with 'q'
 augroup("CloseWithQ", { clear = true })
 autocmd("FileType", {

@@ -72,7 +72,7 @@ return {
   -- mini.nvim: Collection of minimal plugins
   -- LazyVim includes mini.nvim, but we can extend its configuration here
   {
-    "echasnovski/mini.nvim",
+    "nvim-mini/mini.nvim",
     opts = function()
       -- Extend mini.nvim configuration beyond LazyVim defaults
       return {

@@ -1,0 +1,57 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+usage() {
+  cat <<'USAGE'
+Usage: spec-workflow-mcp-add-all [--base PATH] [--max-depth N]
+
+Finds Git repositories under the base directory and adds/updates
+spec-workflow-mcp MCP entries for each.
+
+Defaults:
+  base: /Users/mine/development
+  max-depth: 2
+USAGE
+}
+
+base="/Users/mine/development"
+max_depth="2"
+
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --base)
+      base="${2:-}"
+      shift 2
+      ;;
+    --max-depth)
+      max_depth="${2:-}"
+      shift 2
+      ;;
+    -h|--help)
+      usage
+      exit 0
+      ;;
+    *)
+      echo "error: unknown argument: $1" >&2
+      usage
+      exit 1
+      ;;
+  esac
+done
+
+if [[ -z "$base" || ! -d "$base" ]]; then
+  echo "error: base path not found: $base" >&2
+  exit 1
+fi
+
+script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+adder="${script_dir}/spec-workflow-mcp-add"
+if [[ ! -x "$adder" ]]; then
+  echo "error: missing helper: $adder" >&2
+  exit 1
+fi
+
+while IFS= read -r -d '' git_dir; do
+  repo_dir="$(dirname "$git_dir")"
+  "$adder" "$repo_dir"
+done < <(find "$base" -maxdepth "$max_depth" -type d -name .git -print0)

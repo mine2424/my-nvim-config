@@ -21,6 +21,7 @@ return {
     lazy = false,
     opts = {
       bigfile = { enabled = true },
+      image = { enabled = (vim.env.ZELLIJ == nil or vim.env.ZELLIJ == "") },
       notifier = { enabled = true },
       quickfile = { enabled = true },
       words = { enabled = true },

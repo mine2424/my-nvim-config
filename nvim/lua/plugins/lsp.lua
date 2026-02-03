@@ -7,7 +7,7 @@ return {
   -- Mason: LSP server manager
   -- LazyVim includes Mason, but we can extend its configuration
   {
-    "williamboman/mason.nvim",
+    "mason-org/mason.nvim",
     opts = {
       ui = {
         border = "rounded",
@@ -23,7 +23,7 @@ return {
   -- Mason-LSPConfig: Auto-setup LSP servers
   -- LazyVim includes mason-lspconfig, but we can add more servers here
   {
-    "williamboman/mason-lspconfig.nvim",
+    "mason-org/mason-lspconfig.nvim",
     opts = {
       ensure_installed = {
         -- Core languages
@@ -63,8 +63,8 @@ return {
   {
     "neovim/nvim-lspconfig",
     dependencies = {
-      "williamboman/mason.nvim",
-      "williamboman/mason-lspconfig.nvim",
+      "mason-org/mason.nvim",
+      "mason-org/mason-lspconfig.nvim",
       "hrsh7th/cmp-nvim-lsp",
     },
     opts = {

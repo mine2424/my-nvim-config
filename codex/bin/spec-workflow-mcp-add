@@ -1,0 +1,86 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+usage() {
+  cat <<'USAGE'
+Usage: spec-workflow-mcp-add [PROJECT_PATH]
+
+Adds/updates an MCP server entry for spec-workflow-mcp for the given project.
+If PROJECT_PATH is omitted, uses the current directory.
+
+Environment:
+  CODEX_CONFIG   Path to config.toml (default: $HOME/.codex/config.toml)
+USAGE
+}
+
+if [[ "${1:-}" == "-h" || "${1:-}" == "--help" ]]; then
+  usage
+  exit 0
+fi
+
+project_path="${1:-$(pwd)}"
+if [[ ! -d "$project_path" ]]; then
+  echo "error: project path not found: $project_path" >&2
+  exit 1
+fi
+
+config_path="${CODEX_CONFIG:-$HOME/.codex/config.toml}"
+if [[ ! -f "$config_path" ]]; then
+  echo "error: config not found: $config_path" >&2
+  exit 1
+fi
+
+project_path="$(cd "$project_path" && pwd)"
+project_name="$(basename "$project_path")"
+server_name="spec_workflow_${project_name}"
+
+python3 - <<'PY' "$config_path" "$project_path" "$server_name"
+import sys
+from pathlib import Path
+
+config_path = Path(sys.argv[1])
+project_path = sys.argv[2]
+server_name = sys.argv[3]
+
+lines = config_path.read_text(encoding="utf-8").splitlines(keepends=True)
+
+def is_section(line: str) -> bool:
+    s = line.strip()
+    return s.startswith("[") and s.endswith("]")
+
+def section_name(line: str) -> str:
+    return line.strip()[1:-1]
+
+targets = {
+    "mcp_servers.spec-workflow",
+    f"mcp_servers.{server_name}",
+}
+
+out = []
+i = 0
+while i < len(lines):
+    line = lines[i]
+    if is_section(line):
+        name = section_name(line)
+        if name in targets:
+            i += 1
+            while i < len(lines) and not is_section(lines[i]):
+                i += 1
+            continue
+    out.append(line)
+    i += 1
+
+if out and not out[-1].endswith("\n"):
+    out[-1] = out[-1] + "\n"
+
+block = [
+    f"\n[mcp_servers.{server_name}]\n",
+    "command = \"npx\"\n",
+    f"args = [\"-y\", \"@pimzino/spec-workflow-mcp@latest\", \"{project_path}\"]\n",
+]
+
+config_path.write_text("".join(out + block), encoding="utf-8")
+PY
+
+echo "Added MCP server: ${server_name}"
+echo "Config: ${config_path}"

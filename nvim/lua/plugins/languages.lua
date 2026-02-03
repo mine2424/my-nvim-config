@@ -252,41 +252,14 @@ return {
     },
   },
 
-  -- Markdown editing enhancements (checkboxes, links, tables, etc.)
+  -- Markdown rendering (in-buffer)
   {
-    "MeanderingProgrammer/markdown.nvim",
+    "MeanderingProgrammer/render-markdown.nvim",
     ft = { "markdown" },
-    dependencies = { "nvim-treesitter/nvim-treesitter" },
-    opts = {
-      -- Checkbox configuration
-      checkbox = {
-        -- Toggle checkboxes with <leader>mc
-        toggle = {
-          enable = true,
-          keymap = "<leader>mc",
-        },
-      },
-      -- Link configuration
-      link = {
-        -- Follow links with <leader>ml
-        follow = {
-          enable = true,
-          keymap = "<leader>ml",
-        },
-      },
-      -- Table configuration
-      table = {
-        -- Format tables with <leader>mt
-        format = {
-          enable = true,
-          keymap = "<leader>mt",
-        },
-      },
-    },
+    dependencies = { "nvim-treesitter/nvim-treesitter", "nvim-tree/nvim-web-devicons" },
+    opts = {},
     keys = {
-      { "<leader>mc", "<cmd>MarkdownCheckboxToggle<cr>", desc = "Toggle Checkbox" },
-      { "<leader>ml", "<cmd>MarkdownFollowLink<cr>", desc = "Follow Link" },
-      { "<leader>mt", "<cmd>MarkdownTableFormat<cr>", desc = "Format Table" },
+      { "<leader>mr", "<cmd>RenderMarkdown toggle<cr>", desc = "Toggle Markdown Rendering" },
     },
   },
 

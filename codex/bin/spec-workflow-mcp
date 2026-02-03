@@ -1,0 +1,16 @@
+#!/bin/sh
+set -eu
+
+VERSION="${SPEC_WORKFLOW_MCP_VERSION:-latest}"
+
+if [ "${CLAUDE_PROJECT_DIR:-}" != "" ]; then
+  PROJECT_DIR="$CLAUDE_PROJECT_DIR"
+else
+  if git_root=$(git rev-parse --show-toplevel 2>/dev/null); then
+    PROJECT_DIR="$git_root"
+  else
+    PROJECT_DIR="$(pwd)"
+  fi
+fi
+
+exec npx -y "@pimzino/spec-workflow-mcp@${VERSION}" -- "$PROJECT_DIR"

@@ -33,6 +33,7 @@ temp/
 .env
 .env.local
 *.local
+starship/gcloud/
 
 # テストカバレッジ
 coverage/
